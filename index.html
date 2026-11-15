@@ -748,6 +748,42 @@
         .btn-danger-solid:not(:disabled):hover {
             background: #b91c1c;
         }
+        /* 可點擊的熔煉成功提示框 */
+        .log-toast.clickable {
+            cursor: pointer;
+            padding-right: 16px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .log-toast.clickable:hover {
+            transform: translateY(-3px);
+            border-color: #fde047;
+            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45);
+        }
+
+        .toast-tap-hint {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 8px;
+            font-size: 0.78rem;
+            background: rgba(251, 191, 36, 0.22);
+            color: #fde047;
+            border: 1px solid rgba(251, 191, 36, 0.5);
+            border-radius: 12px;
+            vertical-align: middle;
+        }
+
+        .detail-badge-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent-blue);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -874,6 +910,19 @@
         </div>
     </div>
 
+    <!-- 📖 熔煉漢字詳解 Modal（點擊提示框時彈出） -->
+    <div class="modal-overlay" id="charDetailModal" onclick="if(event.target === this) closeModal('charDetailModal')">
+        <div class="modal-content" style="max-width: 460px;">
+            <div class="modal-header">
+                <h3>📖 漢字詳解</h3>
+                <button class="btn" onclick="closeModal('charDetailModal')">✕</button>
+            </div>
+            <div class="modal-body" id="charDetailBody">
+                <!-- 動態注入字義說明 -->
+            </div>
+        </div>
+    </div>
+    
     <script>
         // ==========================================
         // 1. Google 試算表設定區（填入 SHEET_ID 即可同步）
@@ -1236,30 +1285,105 @@
                 const isNew = !unlockedItems.has(resultId);
                 unlockedItems.add(resultId);
 
+                // 無論是否為新字，都將本次原料組合帶給提示框以供點擊查看
+                const detailData = {
+                    charId: resultId,
+                    ingredients: [...activeChars]
+                };
+
                 if (isNew) {
                     recipeHistory[resultId] = [...activeChars];
                     const targetGroup = ITEMS[resultId].group;
                     const groups = getGroupedCollections();
                     const gObj = groups[targetGroup];
 
-                    // 檢查是否剛好集齊該分類並獲得徽章
                     if (gObj && gObj.isBadgeGroup && gObj.completed) {
-                        showToast(`🎉 煉出【${resultId}】並獲得徽章：${gObj.icon}【${gObj.name}】！`, true);
+                        showToast(`🎉 煉出【${resultId}】並獲得徽章：${gObj.icon}【${gObj.name}】！`, true, detailData);
                     } else {
                         const progressHint = (gObj && gObj.isBadgeGroup) ? `（${gObj.name} ${gObj.unlockedCount}/${gObj.totalCount}）` : '';
-                        showToast(`✨ 熔煉出新字：【${resultId}】${progressHint}`);
+                        showToast(`✨ 熔煉出新字：【${resultId}】${progressHint}`, false, detailData);
                     }
                 } else {
-                    showToast(`🔥 熔煉成功：【${resultId}】`);
+                    showToast(`🔥 熔煉成功：【${resultId}】`, false, detailData);
                 }
 
                 saveProgress();
                 updateProgress();
             } else {
-                showToast(`💨 ${activeChars.join(' + ')} 在爐中化為一縷青煙，沒有組成新字...`);
+                showToast(`💨 ${activeChars.join(' + ')} 在爐中化為一縷青煙，沒有組成新字...`, false, null);
             }
 
             clearAllSlots();
+        }
+
+        let toastTimer = null;
+        function showToast(msg, isBadge = false, detailData = null) {
+            const toast = document.getElementById('logToast');
+            if (toastTimer) clearTimeout(toastTimer);
+
+            if (detailData && ITEMS[detailData.charId]) {
+                toast.innerHTML = `${msg} <span class="toast-tap-hint">👆 點擊查看字義</span>`;
+                toast.className = `log-toast clickable ${isBadge ? 'badge-unlock' : ''}`;
+                toast.onclick = () => {
+                    toast.style.display = 'none';
+                    openCharDetailModal(detailData.charId, detailData.ingredients);
+                };
+            } else {
+                toast.innerText = msg;
+                toast.className = `log-toast ${isBadge ? 'badge-unlock' : ''}`;
+                toast.onclick = null;
+            }
+
+            toast.style.display = 'block';
+            // 延長顯示至 5 秒，方便玩家從容點擊
+            toastTimer = setTimeout(() => { toast.style.display = 'none'; }, isBadge ? 5500 : 4800);
+        }
+
+        function openCharDetailModal(charId, customIngredients = null) {
+            const item = ITEMS[charId];
+            if (!item) return;
+
+            const ingredients = customIngredients || recipeHistory[charId];
+            const recipeHTML = ingredients
+                ? ingredients.map(p => `
+                    <div class="card" style="cursor:default; padding:6px 10px;">
+                        <span class="card-char">${p}</span>
+                        <span class="card-symbol">${ITEMS[p] ? ITEMS[p].pinyin : ''}</span>
+                    </div>
+                `).join('<span style="font-weight:bold; color:var(--accent-ember);">+</span>')
+                : '';
+
+            const body = document.getElementById('charDetailBody');
+            body.innerHTML = `
+                <div style="text-align:center; margin-bottom:14px;">
+                    <div style="font-family:'KaiTi','BiauKai',serif; font-size:3.6rem; color:var(--accent-gold); font-weight:bold; line-height:1.15;">
+                        ${charId}
+                    </div>
+                    <div style="font-size:1rem; color:var(--text-main); margin-top:4px; font-weight:bold;">
+                        ${item.pinyin}
+                    </div>
+                    <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                        <span class="detail-badge-tag">📐 ${item.structure}</span>
+                        ${item.group ? `<span class="detail-badge-tag">${item.badgeIcon || '🏷️'} ${item.group}</span>` : ''}
+                    </div>
+                </div>
+
+                ${recipeHTML ? `
+                <div style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:16px; padding:10px; background:#0f172a; border-radius:8px; border:1px solid var(--border-color);">
+                    ${recipeHTML}
+                    <span style="font-weight:bold; color:var(--accent-gold);">=</span>
+                    <strong style="font-family:'KaiTi','BiauKai',serif; font-size:1.3rem; color:var(--accent-gold);">${charId}</strong>
+                </div>` : ''}
+
+                <div style="background:#131c2e; border-left:3px solid var(--accent-gold); padding:12px 14px; border-radius:6px; font-size:0.92rem; color:var(--text-main); line-height:1.65; margin-bottom:18px;">
+                    ${item.desc || '暫無詳細釋義。'}
+                </div>
+
+                <div style="text-align:center;">
+                    <button class="btn btn-primary" style="margin:0 auto; padding:8px 28px; font-size:0.95rem;" onclick="closeModal('charDetailModal')">✓ 我看完了</button>
+                </div>
+            `;
+            openModal('charDetailModal');
         }
 
         function setCategory(cat, el) {
