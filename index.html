@@ -661,6 +661,93 @@
                 padding: 24px 10px;
             }
         }
+        /* 圖鑑底部危險操作區（防誤觸重置） */
+        .danger-zone {
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 1px dashed var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-danger-outline {
+            background: transparent;
+            color: #f87171;
+            border: 1px solid rgba(248, 113, 113, 0.4);
+            padding: 7px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            transition: all 0.2s;
+        }
+
+        .btn-danger-outline:hover {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: #ef4444;
+        }
+
+        .reset-confirm-box {
+            display: none;
+            width: 100%;
+            max-width: 420px;
+            background: rgba(127, 29, 29, 0.22);
+            border: 1px solid #ef4444;
+            border-radius: 10px;
+            padding: 14px 16px;
+            text-align: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .reset-confirm-box p {
+            font-size: 0.83rem;
+            color: #fecaca;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .reset-input-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .reset-input-row input {
+            width: 120px;
+            background: #0f172a;
+            border: 1px solid #ef4444;
+            color: var(--text-main);
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.9rem;
+            outline: none;
+            user-select: text;
+        }
+
+        .btn-danger-solid {
+            background: #dc2626;
+            color: #fff;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-danger-solid:disabled {
+            background: #475569;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .btn-danger-solid:not(:disabled):hover {
+            background: #b91c1c;
+        }
     </style>
 </head>
 <body>
@@ -679,7 +766,6 @@
         <div class="btn-group">
             <button class="btn btn-badge" onclick="openModal('badgesModal')">🏆 已獲得徽章 (<span id="badgeCountText">0/0</span>)</button>
             <button class="btn btn-primary" onclick="openModal('pokedexModal')">📜 分類圖鑑</button>
-            <button class="btn" onclick="resetProgress()">🔄 重置</button>
         </div>
     </header>
 
@@ -759,6 +845,20 @@
                     <div class="cat-chip" onclick="setPokedexFilter('incomplete', this)">⏳ 尚未集齊主題</div>
                 </div>
                 <div id="pokedexGroupsContainer"></div>
+
+                <!-- 移入圖鑑底部的防誤觸重置區 -->
+                <div class="danger-zone">
+                    <button class="btn-danger-outline" id="openResetZoneBtn" onclick="toggleResetPanel(true)">🗑️ 重置所有遊玩進度...</button>
+                    
+                    <div class="reset-confirm-box" id="resetConfirmBox">
+                        <p>⚠️ 此操作將<strong>永久清空</strong>所有已煉出的漢字與徽章！<br>請在下方輸入「<strong>重置</strong>」二字以解鎖確認按鈕：</p>
+                        <div class="reset-input-row">
+                            <input type="text" id="resetConfirmInput" placeholder="輸入：重置" oninput="checkResetInput()">
+                            <button class="btn-danger-solid" id="confirmResetBtn" disabled onclick="executeResetProgress()">確認清空</button>
+                            <button class="btn" onclick="toggleResetPanel(false)">取消</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1329,6 +1429,38 @@
 
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
+            // 關閉圖鑑時自動收合並重新鎖定重置面板
+            if (id === 'pokedexModal') {
+                toggleResetPanel(false);
+            }
+        }
+
+        function toggleResetPanel(show) {
+            const box = document.getElementById('resetConfirmBox');
+            const openBtn = document.getElementById('openResetZoneBtn');
+            const input = document.getElementById('resetConfirmInput');
+            const confirmBtn = document.getElementById('confirmResetBtn');
+
+            if (!box) return;
+            box.style.display = show ? 'block' : 'none';
+            openBtn.style.display = show ? 'none' : 'inline-block';
+            input.value = '';
+            confirmBtn.disabled = true;
+            if (show) input.focus();
+        }
+
+        function checkResetInput() {
+            const val = document.getElementById('resetConfirmInput').value.trim();
+            document.getElementById('confirmResetBtn').disabled = (val !== '重置');
+        }
+
+        function executeResetProgress() {
+            const val = document.getElementById('resetConfirmInput').value.trim();
+            if (val !== '重置') return;
+
+            localStorage.removeItem('hanzi_smelter_unlocked');
+            localStorage.removeItem('hanzi_smelter_history');
+            location.reload();
         }
 
         function saveProgress() {
