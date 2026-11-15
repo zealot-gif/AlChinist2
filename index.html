@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文字大熔爐 (Hanzi Smelter)</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Cpath d='M26 8h12v10H26z' fill='%23475569'/%3E%3Cpath d='M12 32c0-11 9-18 20-18s20 7 20 18v20H12V32z' fill='%23334155' stroke='%2394a3b8' stroke-width='2.5'/%3E%3Cpath d='M21 52V38c0-6.5 5-11 11-11s11 4.5 11 11v14H21z' fill='%23f97316'/%3E%3Cpath d='M26 52v-9c0-3.5 2.7-6 6-6s6 2.5 6 6v9H26z' fill='%23fde047'/%3E%3Crect x='8' y='50' width='48' height='6' rx='3' fill='%23fbbf24'/%3E%3C/svg%3E">
     <style>
         :root {
             --bg-color: #0f172a;
@@ -933,17 +934,17 @@
 
         // 離線或連線異常時的保底字庫
         let ITEMS = {
-            '疒': { pinyin: 'ㄋㄧˋ', cat: 'base', structure: '象形字', desc: '倚靠病床之形，所有疾病相關漢字的部首。', group: '基礎字根' },
-            '尤': { pinyin: 'ㄧㄡˊ', cat: 'base', structure: '指事字', desc: '突出、特別之義，亦作形聲字的聲符。', group: '基礎字根' },
-            '巴': { pinyin: 'ㄅㄚ', cat: 'base', structure: '象形字', desc: '貼附、緊黏之義，亦作聲符。', group: '基礎字根' },
-            '留': { pinyin: 'ㄌㄧㄡˊ', cat: 'base', structure: '會意字', desc: '停留、積聚不散之義。', group: '基礎字根' },
-            '豆': { pinyin: 'ㄉㄡˋ', cat: 'base', structure: '象形字', desc: '古代盛食器，後指圓粒狀豆類。', group: '基礎字根' },
-            '利': { pinyin: 'ㄌㄧˋ', cat: 'base', structure: '會意字', desc: '以刀割禾，銳利、通順之義。', group: '基礎字根' },
-            '疣': { pinyin: 'ㄧㄡˊ', cat: 'xingsheng', structure: '半包圍形聲', desc: '皮膚上因病毒感染凸起的小贅生物（瘊子）。', group: '皮膚上的病', badgeIcon: '🩹' },
-            '疤': { pinyin: 'ㄅㄚ', cat: 'xingsheng', structure: '半包圍形聲', desc: '皮膚傷口癒合後留下的纖維組織痕跡。', group: '皮膚上的病', badgeIcon: '🩹' },
-            '瘤': { pinyin: 'ㄌㄧㄡˊ', cat: 'xingsheng', structure: '半包圍形聲', desc: '組織細胞異常增生積聚而成的腫塊。', group: '皮膚上的病', badgeIcon: '🩹' },
-            '痘': { pinyin: 'ㄉㄡˋ', cat: 'xingsheng', structure: '半包圍形聲', desc: '皮膚上形如小豆粒的疹子或痤瘡（青春痘）。', group: '皮膚上的病', badgeIcon: '🩹' },
-            '痢': { pinyin: 'ㄌㄧˋ', cat: 'xingsheng', structure: '半包圍形聲', desc: '腹痛泄瀉、排便不暢的腸道疾病（痢疾）。', group: '皮膚上的病', badgeIcon: '🩹' }
+            '疒': { pinyin: 'ㄋㄧˋ', cats: ['部首'], structure: '象形字', desc: '倚靠病床之形，所有疾病相關漢字的部首。', groups: ['基礎字根'], groupIcons: [''] },
+            '尤': { pinyin: 'ㄧㄡˊ', cats: ['抽象'], structure: '指事字', desc: '突出、特別之義，亦作形聲字的聲符。', groups: ['基礎字根'], groupIcons: [''] },
+            '巴': { pinyin: 'ㄅㄚ', cats: ['抽象'], structure: '象形字', desc: '貼附、緊黏之義，亦作聲符。', groups: ['基礎字根'], groupIcons: [''] },
+            '留': { pinyin: 'ㄌㄧㄡˊ', cats: ['抽象'], structure: '會意字', desc: '停留、積聚不散之義。', groups: ['基礎字根'], groupIcons: [''] },
+            '豆': { pinyin: 'ㄉㄡˋ', cats: ['草蟲', '部首'], structure: '象形字', desc: '古代盛食器，後指圓粒狀豆類。', groups: ['基礎字根'], groupIcons: [''] },
+            '利': { pinyin: 'ㄌㄧˋ', cats: ['抽象'], structure: '會意字', desc: '以刀割禾，銳利、通順之義。', groups: ['基礎字根'], groupIcons: [''] },
+            '疣': { pinyin: 'ㄧㄡˊ', cats: ['抽象'], structure: '半包圍形聲', desc: '皮膚上因病毒感染凸起的小贅生物（瘊子）。', groups: ['皮膚上的病'], groupIcons: ['🩹'] },
+            '疤': { pinyin: 'ㄅㄚ', cats: ['抽象'], structure: '半包圍形聲', desc: '皮膚傷口癒合後留下的纖維組織痕跡。', groups: ['皮膚上的病'], groupIcons: ['🩹'] },
+            '瘤': { pinyin: 'ㄌㄧㄡˊ', cats: ['抽象'], structure: '半包圍形聲', desc: '組織細胞異常增生積聚而成的腫塊。', groups: ['皮膚上的病'], groupIcons: ['🩹'] },
+            '痘': { pinyin: 'ㄉㄡˋ', cats: ['抽象'], structure: '半包圍形聲', desc: '皮膚上形如小豆粒的疹子或痤瘡（青春痘）。', groups: ['皮膚上的病'], groupIcons: ['🩹'] },
+            '痢': { pinyin: 'ㄌㄧˋ', cats: ['抽象'], structure: '半包圍形聲', desc: '腹痛泄瀉、排便不暢的腸道疾病（痢疾）。', groups: ['皮膚上的病'], groupIcons: ['🩹'] }
         };
 
         let RECIPES = {
@@ -964,8 +965,43 @@
         let pokedexFilter = 'all';
 
         // ==========================================
-        // 2. 試算表 CSV 讀取與解析引擎
+        // 2. 試算表 CSV 讀取與多標籤/多徽章解析引擎
         // ==========================================
+        const CAT_ALIAS = {
+            '自然': '自然', 'nature': '自然',
+            '抽象': '抽象', 'abstract': '抽象',
+            '草蟲': '草蟲', 'plant': '草蟲', 'insect': '草蟲',
+            '禽獸': '禽獸', 'beast': '禽獸', 'animal': '禽獸',
+            '部首': '部首', 'radical': '部首', 'base': '部首'
+        };
+
+        function parseCategories(rawCat) {
+            if (!rawCat) return [];
+            return String(rawCat)
+                .split(/[,，、\/+|]+/)
+                .map(s => s.trim())
+                .filter(Boolean)
+                .map(s => CAT_ALIAS[s.toLowerCase()] || s);
+        }
+
+        function parseGroupsAndIcons(rawGroup, rawIcon, initFlag) {
+            if (!rawGroup || !String(rawGroup).trim()) {
+                return {
+                    groups: [initFlag ? '基礎字根' : '綜合字集'],
+                    groupIcons: ['🏅']
+                };
+            }
+            const groups = String(rawGroup)
+                .split(/[,，、\/+|]+/)
+                .map(s => s.trim())
+                .filter(Boolean);
+            const icons = rawIcon
+                ? String(rawIcon).split(/[,，、\/+|]+/).map(s => s.trim()).filter(Boolean)
+                : [];
+            const groupIcons = groups.map((_, idx) => icons[idx] || icons[0] || '');
+            return { groups, groupIcons };
+        }
+
         function parseCSV(text) {
             const rows = [];
             let row = [];
@@ -1014,30 +1050,7 @@
             return rows;
         }
 
-        // 支援中文名稱與英文代碼的多重分類解析器（可用 、 , / 隔開）
-        const CAT_ALIAS = {
-            '自然': '自然', 'nature': '自然',
-            '抽象': '抽象', 'abstract': '抽象',
-            '草蟲': '草蟲', 'plant': '草蟲', 'insect': '草蟲',
-            '禽獸': '禽獸', 'beast': '禽獸', 'animal': '禽獸',
-            '部首': '部首', 'radical': '部首', 'base': '部首'
-        };
-
-        function parseCategories(rawCat) {
-            if (!rawCat) return [];
-            return String(rawCat)
-                .split(/[,，、\/+|]+/)
-                .map(s => s.trim())
-                .filter(Boolean)
-                .map(s => CAT_ALIAS[s.toLowerCase()] || s);
-        }
-
         async function loadDatabaseFromSheets() {
-            // 先將內建保底字庫轉為陣列格式
-            Object.values(ITEMS).forEach(item => {
-                if (!item.cats) item.cats = parseCategories(item.cat || '部首');
-            });
-
             if (!SHEET_ID || SHEET_ID === 'YOUR_GOOGLE_SHEET_ID') {
                 return;
             }
@@ -1064,19 +1077,15 @@
                     const [char, pinyin, cat, structure, desc, isInit, group, badgeIcon] = cols;
                     if (!char) return;
                     const initFlag = String(isInit).toUpperCase() === 'TRUE';
-                    // 保留所有 group 徽章設定；未填 group 且為初始字根者歸入「基礎字根」
-                    const resolvedGroup = group
-                        ? group.trim()
-                        : (initFlag ? '基礎字根' : '綜合字集');
+                    const { groups, groupIcons } = parseGroupsAndIcons(group, badgeIcon, initFlag);
 
                     newItems[char] = {
                         pinyin: pinyin || '',
-                        cat: cat || '',
                         cats: parseCategories(cat),
                         structure: structure || '會意字',
                         desc: desc || '',
-                        group: resolvedGroup,
-                        badgeIcon: badgeIcon ? badgeIcon.trim() : '🏅'
+                        groups,
+                        groupIcons
                     };
                     if (initFlag) newInitial.push(char);
                 });
@@ -1109,24 +1118,30 @@
         }
 
         // ==========================================
-        // 3. 分組統計與徽章計算引擎
+        // 3. 分組統計與一字多徽章計算引擎
         // ==========================================
         function getGroupedCollections() {
             const groups = {};
             Object.entries(ITEMS).forEach(([char, info]) => {
-                const gName = info.group || '未分類';
-                if (!groups[gName]) {
-                    groups[gName] = {
-                        name: gName,
-                        icon: info.badgeIcon || '🏅',
-                        isBadgeGroup: gName !== '基礎字根',
-                        chars: []
-                    };
-                }
-                if (info.badgeIcon && groups[gName].icon === '🏅') {
-                    groups[gName].icon = info.badgeIcon;
-                }
-                groups[gName].chars.push(char);
+                const gList = info.groups && info.groups.length ? info.groups : ['未分類'];
+                const iList = info.groupIcons || [];
+
+                gList.forEach((gName, idx) => {
+                    if (!groups[gName]) {
+                        groups[gName] = {
+                            name: gName,
+                            icon: iList[idx] || '🏅',
+                            isBadgeGroup: gName !== '基礎字根',
+                            chars: []
+                        };
+                    } else if (groups[gName].icon === '🏅' && iList[idx]) {
+                        groups[gName].icon = iList[idx];
+                    }
+
+                    if (!groups[gName].chars.includes(char)) {
+                        groups[gName].chars.push(char);
+                    }
+                });
             });
 
             Object.values(groups).forEach(g => {
@@ -1161,11 +1176,11 @@
                 const item = ITEMS[id];
                 if (!item) return;
 
-                // 只要該字的 cats 陣列包含目前選取的分類，就會顯示出來
                 if (currentCategory !== 'all' && !(item.cats && item.cats.includes(currentCategory))) return;
 
                 const catText = (item.cats || []).join(' ');
-                if (search && !id.includes(search) && !item.pinyin.includes(search) && !(item.group || '').includes(search) && !catText.includes(search)) return;
+                const groupText = (item.groups || []).join(' ');
+                if (search && !id.includes(search) && !item.pinyin.includes(search) && !groupText.includes(search) && !catText.includes(search)) return;
 
                 const count = countInSlots(id);
                 const card = document.createElement('div');
@@ -1244,15 +1259,24 @@
 
                 if (isNew) {
                     recipeHistory[resultId] = [...activeChars];
-                    const targetGroup = ITEMS[resultId].group;
+                    const targetGroups = ITEMS[resultId].groups || [];
                     const groups = getGroupedCollections();
-                    const gObj = groups[targetGroup];
+                    const badgeTargets = targetGroups
+                        .map(gName => groups[gName])
+                        .filter(g => g && g.isBadgeGroup);
 
-                    if (gObj && gObj.isBadgeGroup && gObj.completed) {
-                        showToast(`🎉 煉出【${resultId}】並獲得徽章：${gObj.icon}【${gObj.name}】！`, true, detailData);
+                    const newlyCompleted = badgeTargets.filter(g => g.completed);
+
+                    if (newlyCompleted.length > 0) {
+                        const badgeLabels = newlyCompleted.map(g => `${g.icon}【${g.name}】`).join('、');
+                        showToast(`🎉 煉出【${resultId}】並獲得徽章：${badgeLabels}！`, true, detailData);
+                    } else if (badgeTargets.length > 0) {
+                        const progressHint = badgeTargets
+                            .map(g => `${g.name} ${g.unlockedCount}/${g.totalCount}`)
+                            .join('、');
+                        showToast(`✨ 熔煉出新字：【${resultId}】（${progressHint}）`, false, detailData);
                     } else {
-                        const progressHint = (gObj && gObj.isBadgeGroup) ? `（${gObj.name} ${gObj.unlockedCount}/${gObj.totalCount}）` : '';
-                        showToast(`✨ 熔煉出新字：【${resultId}】${progressHint}`, false, detailData);
+                        showToast(`✨ 熔煉出新字：【${resultId}】`, false, detailData);
                     }
                 } else {
                     showToast(`🔥 熔煉成功：【${resultId}】`, false, detailData);
@@ -1304,6 +1328,7 @@
             const item = ITEMS[charId];
             if (!item) return;
 
+            const groupsMap = getGroupedCollections();
             const ingredients = customIngredients || recipeHistory[charId];
             const recipeHTML = ingredients
                 ? ingredients.map(p => `
@@ -1313,6 +1338,11 @@
                     </div>
                 `).join('<span style="font-weight:bold; color:var(--accent-ember);">+</span>')
                 : '';
+
+            const groupTagsHTML = (item.groups || []).map(gName => {
+                const icon = groupsMap[gName] ? groupsMap[gName].icon : '🏷️';
+                return `<span class="detail-badge-tag">${icon} ${gName}</span>`;
+            }).join('');
 
             const body = document.getElementById('charDetailBody');
             body.innerHTML = `
@@ -1325,8 +1355,8 @@
                     </div>
                     <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:8px;">
                         <span class="detail-badge-tag">📐 ${item.structure}</span>
-                        ${item.group ? `<span class="detail-badge-tag">${item.badgeIcon || '🏷️'} ${item.group}</span>` : ''}
                         ${item.cats && item.cats.length ? `<span class="detail-badge-tag">🗂️ ${item.cats.join('、')}</span>` : ''}
+                        ${groupTagsHTML}
                     </div>
                 </div>
 
