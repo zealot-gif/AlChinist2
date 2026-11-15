@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字大熔爐 (Hanzi Smelter)</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --accent-blue: #38bdf8;
+            --accent-gold: #fbbf24;
+            --accent-ember: #f97316;
+            --accent-green: #34d399;
+            --accent-purple: #c084fc;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* 頂部導覽列 */
+        header {
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .title-group h1 {
+            font-size: 1.3rem;
+            color: var(--accent-gold);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-bar-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0,0,0,0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-bar {
+            width: 110px;
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-ember), var(--accent-gold));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        button.btn {
+            background: var(--border-color);
+            color: var(--text-main);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        button.btn:hover {
+            background: #475569;
+            border-color: var(--accent-gold);
+        }
+
+        button.btn-primary {
+            background: #c2410c;
+        }
+        button.btn-primary:hover {
+            background: #9a3412;
+        }
+
+        button.btn-badge {
+            background: linear-gradient(135deg, #78350f, #b45309);
+            border-color: var(--accent-gold);
+            color: #fef3c7;
+            font-weight: bold;
+        }
+        button.btn-badge:hover {
+            background: linear-gradient(135deg, #92400e, #d97706);
+        }
+
+        /* 主要遊玩區域 */
+        main {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 60px);
+        }
+
+        /* 左側字庫 */
+        .sidebar {
+            width: 330px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-box {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-box input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .category-filter {
+            display: flex;
+            gap: 4px;
+            padding: 8px 12px;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cat-chip {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            background: #334155;
+            border-radius: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            color: var(--text-muted);
+        }
+
+        .cat-chip.active {
+            background: var(--accent-gold);
+            color: #000;
+            font-weight: bold;
+        }
+
+        .inventory-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-content: flex-start;
+        }
+
+        /* 漢字卡片樣式 */
+        .card {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-gold);
+            box-shadow: 0 4px 8px rgba(251, 191, 36, 0.2);
+        }
+
+        .card.selected {
+            border-color: var(--accent-ember);
+            background: #2b1a12;
+            box-shadow: 0 0 10px rgba(249, 115, 22, 0.35);
+        }
+
+        .card-char {
+            font-family: "KaiTi", "BiauKai", "DFKai-SB", serif;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .card-symbol {
+            font-size: 0.72rem;
+            opacity: 0.75;
+            color: var(--text-muted);
+        }
+
+        .card-badge {
+            background: var(--accent-ember);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 1px 5px;
+            border-radius: 10px;
+            margin-left: 2px;
+        }
+
+        /* 右側熔爐工作檯 */
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: radial-gradient(circle at center, #261b18 0%, #0f172a 75%);
+            padding: 20px;
+        }
+
+        .workspace-hint {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+            text-align: center;
+        }
+
+        .furnace-circle {
+            width: 340px;
+            height: 340px;
+            border: 2px dashed #475569;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 26px;
+            transition: all 0.3s;
+        }
+
+        .furnace-circle.ready {
+            border-color: var(--accent-ember);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.35); }
+            70% { box-shadow: 0 0 0 22px rgba(249, 115, 22, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+        }
+
+        .slot {
+            width: 96px;
+            height: 96px;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.88);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .slot:hover {
+            border-color: var(--accent-gold);
+            transform: scale(1.04);
+        }
+
+        .slot-0 { top: 22px; left: 50%; transform: translateX(-50%); }
+        .slot-0:hover { transform: translateX(-50%) scale(1.04); }
+        .slot-1 { bottom: 34px; left: 32px; }
+        .slot-2 { bottom: 34px; right: 32px; }
+
+        .slot-char {
+            font-family: "KaiTi", "BiauKai", "DFKai-SB", serif;
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+            line-height: 1.1;
+        }
+
+        .slot-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .slot-placeholder {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .furnace-core {
+            font-size: 1.6rem;
+            opacity: 0.8;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .combine-btn {
+            background: linear-gradient(135deg, var(--accent-ember), var(--accent-gold));
+            color: #000;
+            font-weight: bold;
+            font-size: 1.1rem;
+            padding: 12px 34px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+            transition: all 0.2s;
+        }
+
+        .combine-btn:disabled {
+            background: #334155;
+            color: #64748b;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .combine-btn:not(:disabled):hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.65);
+        }
+
+        .clear-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .clear-btn:hover {
+            color: var(--text-main);
+            border-color: var(--text-muted);
+        }
+
+        /* 提示通知 Log */
+        .log-toast {
+            position: absolute;
+            bottom: 20px;
+            background: rgba(30, 41, 59, 0.96);
+            border: 1px solid var(--accent-gold);
+            padding: 12px 22px;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            display: none;
+            animation: fadeIn 0.25s forwards;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 90%;
+            z-index: 20;
+        }
+
+        .log-toast.badge-unlock {
+            background: linear-gradient(135deg, #451a03, #78350f);
+            border: 2px solid var(--accent-gold);
+            color: #fef3c7;
+            font-weight: bold;
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.55);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Modal 彈窗通用 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 92%;
+            max-width: 840px;
+            max-height: 86vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* 圖鑑分組區塊樣式 */
+        .pokedex-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .group-section {
+            background: #131c2e;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 18px;
+        }
+
+        .group-section.completed {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 14px rgba(251, 191, 36, 0.12);
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .group-title {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .group-status {
+            font-size: 0.78rem;
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: #0f172a;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+
+        .group-status.earned {
+            background: linear-gradient(135deg, #78350f, #b45309);
+            color: #fef3c7;
+            border-color: var(--accent-gold);
+            font-weight: bold;
+        }
+
+        .pokedex-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+            gap: 10px;
+        }
+
+        .poke-card {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .poke-card.locked {
+            opacity: 0.45;
+            filter: grayscale(1);
+        }
+
+        .poke-title {
+            font-weight: bold;
+            color: var(--accent-gold);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .poke-char {
+            font-family: "KaiTi", "BiauKai", "DFKai-SB", serif;
+            font-size: 1.45rem;
+        }
+
+        .poke-desc {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .poke-structure {
+            font-size: 0.74rem;
+            color: var(--accent-blue);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 2px 7px;
+            border-radius: 4px;
+            align-self: flex-start;
+        }
+
+        /* 徽章陳列館樣式 */
+        .badge-section-title {
+            font-size: 1rem;
+            color: var(--accent-gold);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .badge-card {
+            background: linear-gradient(145deg, #291d0e, #18130c);
+            border: 1.5px solid var(--accent-gold);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(251, 191, 36, 0.18);
+            position: relative;
+        }
+
+        .badge-card.locked {
+            background: #0f172a;
+            border: 1px dashed var(--border-color);
+            box-shadow: none;
+            opacity: 0.65;
+        }
+
+        .badge-emblem {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(251,191,36,0.28) 0%, rgba(180,83,9,0.15) 100%);
+            border: 2px solid var(--accent-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .badge-card.locked .badge-emblem {
+            background: #1e293b;
+            border-color: #475569;
+            filter: grayscale(1);
+        }
+
+        .badge-name {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+
+        .badge-card.locked .badge-name {
+            color: var(--text-muted);
+        }
+
+        .badge-chars-pill {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .mini-char {
+            font-family: "KaiTi", "BiauKai", "DFKai-SB", serif;
+            font-size: 0.95rem;
+            padding: 2px 7px;
+            border-radius: 5px;
+            background: rgba(251, 191, 36, 0.18);
+            color: #fef3c7;
+            border: 1px solid rgba(251, 191, 36, 0.4);
+        }
+
+        .mini-char.missing {
+            background: #1e293b;
+            color: #64748b;
+            border-color: #334155;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column-reverse;
+                height: auto;
+            }
+            .sidebar {
+                width: 100%;
+                height: 45vh;
+                border-right: none;
+                border-top: 1px solid var(--border-color);
+            }
+            .workspace {
+                padding: 24px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-group">
+            <h1>🔥 文字大熔爐 <span style="font-size:0.8rem; color:var(--text-muted);">Hanzi Smelter</span></h1>
+        </div>
+        
+        <div class="progress-bar-container">
+            <span style="font-size:0.85rem; color:var(--text-muted);">收錄字數</span>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <span style="font-size:0.85rem; font-weight:bold;" id="progressText">0 / 0</span>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-badge" onclick="openModal('badgesModal')">🏆 已獲得徽章 (<span id="badgeCountText">0/0</span>)</button>
+            <button class="btn btn-primary" onclick="openModal('pokedexModal')">📜 分類圖鑑</button>
+            <button class="btn" onclick="resetProgress()">🔄 重置</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- 左側：漢字庫 -->
+        <aside class="sidebar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜尋漢字、注音或分類..." oninput="filterInventory()">
+            </div>
+            <div class="category-filter" id="categoryFilters">
+                <div class="cat-chip active" onclick="setCategory('all', this)">全部</div>
+                <div class="cat-chip" onclick="setCategory('base', this)">基礎字根</div>
+                <div class="cat-chip" onclick="setCategory('dup', this)">疊字奇觀</div>
+                <div class="cat-chip" onclick="setCategory('huiyi', this)">會意新字</div>
+                <div class="cat-chip" onclick="setCategory('xingsheng', this)">形聲字</div>
+                <div class="cat-chip" onclick="setCategory('rare', this)">進階與生僻</div>
+            </div>
+            <div class="inventory-list" id="inventoryList"></div>
+        </aside>
+
+        <!-- 右側：三槽文字熔爐 -->
+        <section class="workspace">
+            <div class="workspace-hint">
+                集齊同一主題分類的所有漢字，即可解鎖專屬<strong>【成就徽章】</strong>！
+            </div>
+
+            <div class="furnace-circle" id="furnaceCircle">
+                <div class="slot slot-0" id="slot0" onclick="clearSlot(0)">
+                    <div class="slot-placeholder">爐位 1</div>
+                </div>
+                <div class="furnace-core">🔥</div>
+                <div class="slot slot-1" id="slot1" onclick="clearSlot(1)">
+                    <div class="slot-placeholder">爐位 2</div>
+                </div>
+                <div class="slot slot-2" id="slot2" onclick="clearSlot(2)">
+                    <div class="slot-placeholder">爐位 3<br><span style="font-size:0.65rem;">(選填)</span></div>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button class="combine-btn" id="combineBtn" disabled onclick="doSynthesis()">投入熔煉</button>
+                <button class="clear-btn" onclick="clearAllSlots()">清空爐膛</button>
+            </div>
+
+            <div class="log-toast" id="logToast"></div>
+        </section>
+    </main>
+
+    <!-- 🏆 已獲得徽章 Modal -->
+    <div class="modal-overlay" id="badgesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🏆 徽章陳列館（集齊主題全字解鎖）</h3>
+                <button class="btn" onclick="closeModal('badgesModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <h4 class="badge-section-title">✨ 已獲得徽章 (<span id="earnedBadgeNum">0</span>)</h4>
+                <div class="badges-grid" id="earnedBadgesGrid"></div>
+
+                <h4 class="badge-section-title" style="color:var(--text-muted);">🔒 尚未集齊的徽章 (<span id="lockedBadgeNum">0</span>)</h4>
+                <div class="badges-grid" id="lockedBadgesGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📜 分類圖鑑 Modal -->
+    <div class="modal-overlay" id="pokedexModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📜 說文解字：主題分類圖鑑（每類 10 字以內）</h3>
+                <button class="btn" onclick="closeModal('pokedexModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="pokedex-tabs">
+                    <div class="cat-chip active" onclick="setPokedexFilter('all', this)">顯示全部主題</div>
+                    <div class="cat-chip" onclick="setPokedexFilter('earned', this)">🏆 已獲徽章主題</div>
+                    <div class="cat-chip" onclick="setPokedexFilter('incomplete', this)">⏳ 尚未集齊主題</div>
+                </div>
+                <div id="pokedexGroupsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🌳 造字配方 Modal -->
+    <div class="modal-overlay" id="recipeTreeModal">
+        <div class="modal-content" style="max-width: 460px;">
+            <div class="modal-header">
+                <h3>🌳 造字配方 (Recipe Tree)</h3>
+                <button class="btn" onclick="closeModal('recipeTreeModal')">✕</button>
+            </div>
+            <div class="modal-body" id="recipeTreeBody"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. Google 試算表設定區（填入 SHEET_ID 即可同步）
+        // ==========================================
+        const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID';
+        const ITEMS_SHEET_NAME = 'Items';
+        const RECIPES_SHEET_NAME = 'Recipes';
+
+        // 內建預設資料庫（包含你舉例的 疒部：疣、疤、瘤、痘、痢，且每類皆在 10 字以內）
+        let ITEMS = {
+            // --- 基礎字根（不計入徽章，作為合成原料）---
+            '疒': { pinyin: 'ㄋㄧˋ', cat: 'base', structure: '象形字', desc: '倚靠病床之形，所有疾病相關漢字的部首。', group: '基礎字根' },
+            '尤': { pinyin: 'ㄧㄡˊ', cat: 'base', structure: '指事字', desc: '突出、特別之義，亦作形聲字的聲符。', group: '基礎字根' },
+            '巴': { pinyin: 'ㄅㄚ', cat: 'base', structure: '象形字', desc: '貼附、緊黏之義，亦作聲符。', group: '基礎字根' },
+            '留': { pinyin: 'ㄌㄧㄡˊ', cat: 'base', structure: '會意字', desc: '停留、積聚不散之義。', group: '基礎字根' },
+            '豆': { pinyin: 'ㄉㄡˋ', cat: 'base', structure: '象形字', desc: '古代盛食器，後指圓粒狀豆類。', group: '基礎字根' },
+            '利': { pinyin: 'ㄌㄧˋ', cat: 'base', structure: '會意字', desc: '以刀割禾，銳利、通順之義。', group: '基礎字根' },
+            '火': { pinyin: 'ㄏㄨㄛˇ', cat: 'base', structure: '象形字', desc: '象火焰向上燃燒之形。', group: '基礎字根' },
+            '水': { pinyin: 'ㄕㄨㄟˇ', cat: 'base', structure: '象形字', desc: '象河川水流蜿蜒之形。', group: '基礎字根' },
+            '木': { pinyin: 'ㄇㄨˋ', cat: 'base', structure: '象形字', desc: '上有枝葉、下有樹根的樹木本字。', group: '基礎字根' },
+            '金': { pinyin: 'ㄐㄧㄣ', cat: 'base', structure: '會意字', desc: '埋藏於土中的金屬礦物。', group: '基礎字根' },
+            '日': { pinyin: 'ㄖˋ', cat: 'base', structure: '象形字', desc: '太陽的輪廓，光明之源。', group: '基礎字根' },
+            '月': { pinyin: 'ㄩㄝˋ', cat: 'base', structure: '象形字', desc: '一彎新月之形。', group: '基礎字根' },
+            '人': { pinyin: 'ㄖㄣˊ', cat: 'base', structure: '象形字', desc: '側面站立的人形。', group: '基礎字根' },
+            '言': { pinyin: 'ㄧㄢˊ', cat: 'base', structure: '會意字', desc: '開口說話、表達心意。', group: '基礎字根' },
+            '口': { pinyin: 'ㄎㄡˇ', cat: 'base', structure: '象形字', desc: '人的嘴巴與出入口。', group: '基礎字根' },
+            '心': { pinyin: 'ㄒㄧㄣ', cat: 'base', structure: '象形字', desc: '心臟與情感思考所在。', group: '基礎字根' },
+            '門': { pinyin: 'ㄇㄣˊ', cat: 'base', structure: '象形字', desc: '左右兩扇門扉相對之形。', group: '基礎字根' },
+
+            // --- 主題 1：【皮膚上的病】（5字）---
+            '疣': { pinyin: 'ㄧㄡˊ', cat: 'xingsheng', structure: '半包圍形聲', desc: '皮膚上因病毒感染凸起的小贅生物（瘊子）。', group: '皮膚上的病', badgeIcon: '🩹' },
+            '疤': { pinyin: 'ㄅㄚ', cat: 'xingsheng', structure: '半包圍形聲', desc: '皮膚傷口癒合後留下的纖維組織痕跡。', group: '皮膚上的病', badgeIcon: '🩹' },
+            '瘤': { pinyin: 'ㄌㄧㄡˊ', cat: 'xingsheng', structure: '半包圍形聲', desc: '組織細胞異常增生積聚而成的腫塊。', group: '皮膚上的病', badgeIcon: '🩹' },
+            '痘': { pinyin: 'ㄉㄡˋ', cat: 'xingsheng', structure: '半包圍形聲', desc: '皮膚上形如小豆粒的疹子或痤瘡（青春痘）。', group: '皮膚上的病', badgeIcon: '🩹' },
+            '痢': { pinyin: 'ㄌㄧˋ', cat: 'xingsheng', structure: '半包圍形聲', desc: '腹痛泄瀉、排便不暢的腸道疾病（痢疾）。', group: '皮膚上的病', badgeIcon: '🩹' },
+
+            // --- 主題 2：【烈焰與水澤】（6字）---
+            '炎': { pinyin: 'ㄧㄢˊ', cat: 'dup', structure: '上下二疊', desc: '雙火相疊，火光上騰，天氣酷熱。', group: '烈焰與水澤', badgeIcon: '🌊' },
+            '焱': { pinyin: 'ㄧㄢˋ', cat: 'dup', structure: '品字結構', desc: '三火相聚，火花飛濺、火焰閃耀。', group: '烈焰與水澤', badgeIcon: '🌊' },
+            '燚': { pinyin: 'ㄧˋ', cat: 'rare', structure: '四疊奇字', desc: '四火相疊！形容火勢極其猛烈熾熱。', group: '烈焰與水澤', badgeIcon: '🌊' },
+            '沝': { pinyin: 'ㄓㄨㄟˇ', cat: 'rare', structure: '左右二疊', desc: '二水並流，古同「水」字。', group: '烈焰與水澤', badgeIcon: '🌊' },
+            '淼': { pinyin: 'ㄇㄧㄠˇ', cat: 'dup', structure: '品字結構', desc: '三水浩蕩，形容水勢遼闊無邊無際。', group: '烈焰與水澤', badgeIcon: '🌊' },
+            '淡': { pinyin: 'ㄉㄢˋ', cat: 'huiyi', structure: '左右會意', desc: '以水澆減炎火之勢，引申為清淡、平淡。', group: '烈焰與水澤', badgeIcon: '🌊' },
+
+            // --- 主題 3：【草木與金石】（5字）---
+            '林': { pinyin: 'ㄌㄧㄣˊ', cat: 'dup', structure: '左右二疊', desc: '平地有叢木曰林，兩木成林。', group: '草木與金石', badgeIcon: '🌲' },
+            '森': { pinyin: 'ㄙㄣ', cat: 'dup', structure: '品字結構', desc: '三木成森，樹木叢生、茂密幽深。', group: '草木與金石', badgeIcon: '🌲' },
+            '焚': { pinyin: 'ㄈㄣˊ', cat: 'huiyi', structure: '上下會意', desc: '在樹林（林）下放火（火），意為焚燒。', group: '草木與金石', badgeIcon: '🌲' },
+            '鑫': { pinyin: 'ㄒㄧㄣ', cat: 'dup', structure: '品字結構', desc: '三金疊加，象徵財富興盛、金光閃耀。', group: '草木與金石', badgeIcon: '🌲' },
+            '淦': { pinyin: 'ㄍㄢˋ', cat: 'xingsheng', structure: '左右形聲會意', desc: '本義為水滲入船中，現代網路常作感嘆詞諧音。', group: '草木與金石', badgeIcon: '🌲' },
+
+            // --- 主題 4：【日月與眾生】（6字）---
+            '昌': { pinyin: 'ㄔㄤ', cat: 'dup', structure: '上下二疊', desc: '雙日並明，陽光普照、興旺繁榮。', group: '日月與眾生', badgeIcon: '☀️' },
+            '晶': { pinyin: 'ㄐㄧㄥ', cat: 'dup', structure: '品字結構', desc: '三日同輝，光亮剔透（如水晶）。', group: '日月與眾生', badgeIcon: '☀️' },
+            '明': { pinyin: 'ㄇㄧㄥˊ', cat: 'huiyi', structure: '左右會意', desc: '日與月交相輝映，帶來光明。', group: '日月與眾生', badgeIcon: '☀️' },
+            '從': { pinyin: 'ㄘㄨㄥˊ', cat: 'dup', structure: '左右二疊', desc: '一人在後跟隨一人，意為跟從。', group: '日月與眾生', badgeIcon: '☀️' },
+            '眾': { pinyin: 'ㄓㄨㄥˋ', cat: 'dup', structure: '品字結構', desc: '三人成眾，表示人數眾多。', group: '日月與眾生', badgeIcon: '☀️' },
+            '信': { pinyin: 'ㄒㄧㄣˋ', cat: 'huiyi', structure: '左右會意', desc: '人言為信，說話真實不欺，誠實守信。', group: '日月與眾生', badgeIcon: '☀️' },
+
+            // --- 主題 5：【門裡乾坤】（5字）---
+            '問': { pinyin: 'ㄨㄣˋ', cat: 'huiyi', structure: '半包圍會意', desc: '站在門前開口詢問，即「發問」。', group: '門裡乾坤', badgeIcon: '🚪' },
+            '間': { pinyin: 'ㄐㄧㄢ', cat: 'huiyi', structure: '半包圍會意', desc: '陽光從門縫中透入，引申為空間與時間。', group: '門裡乾坤', badgeIcon: '🚪' },
+            '閒': { pinyin: 'ㄒㄧㄢˊ', cat: 'huiyi', structure: '半包圍會意', desc: '夜晚月光照進門扉，清靜悠閒。', group: '門裡乾坤', badgeIcon: '🚪' },
+            '閃': { pinyin: 'ㄕㄢˇ', cat: 'huiyi', structure: '半包圍會意', desc: '人從門中快速一晃而過，閃現。', group: '門裡乾坤', badgeIcon: '🚪' },
+            '悶': { pinyin: 'ㄇㄣˋ', cat: 'huiyi', structure: '半包圍會意', desc: '心被緊鎖在門內，鬱結煩悶。', group: '門裡乾坤', badgeIcon: '🚪' }
+        };
+
+        let RECIPES = {
+            // 皮膚上的病
+            '疒+尤': '疣',
+            '巴+疒': '疤',
+            '疒+留': '瘤',
+            '疒+豆': '痘',
+            '利+疒': '痢',
+            // 烈焰與水澤
+            '火+火': '炎',
+            '火+火+火': '焱',
+            '炎+炎': '燚',
+            '水+水': '沝',
+            '水+水+水': '淼',
+            '水+炎': '淡',
+            // 草木與金石
+            '木+木': '林',
+            '木+木+木': '森',
+            '林+火': '焚',
+            '金+金+金': '鑫',
+            '水+金': '淦',
+            // 日月與眾生
+            '日+日': '昌',
+            '日+日+日': '晶',
+            '日+月': '明',
+            '人+人': '從',
+            '人+人+人': '眾',
+            '人+言': '信',
+            // 門裡乾坤
+            '口+門': '問',
+            '日+門': '間',
+            '月+門': '閒',
+            '人+門': '閃',
+            '心+門': '悶'
+        };
+
+        let INITIAL_UNLOCKED = [
+            '疒', '尤', '巴', '留', '豆', '利',
+            '火', '水', '木', '金', '日', '月', '人', '言', '口', '心', '門'
+        ];
+
+        // 遊戲狀態 State
+        let unlockedItems = new Set();
+        let recipeHistory = {};
+        let slots = [null, null, null];
+        let currentCategory = 'all';
+        let pokedexFilter = 'all';
+
+        // ==========================================
+        // 2. 試算表 CSV 讀取與解析引擎（支援 group 與 badge_icon 欄位）
+        // ==========================================
+        function parseCSV(text) {
+            const rows = [];
+            let row = [];
+            let cell = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                const next = text[i + 1];
+
+                if (inQuotes) {
+                    if (c === '"' && next === '"') {
+                        cell += '"';
+                        i++;
+                    } else if (c === '"') {
+                        inQuotes = false;
+                    } else {
+                        cell += c;
+                    }
+                } else {
+                    if (c === '"') {
+                        inQuotes = true;
+                    } else if (c === ',') {
+                        row.push(cell.trim());
+                        cell = '';
+                    } else if (c === '\r' && next === '\n') {
+                        row.push(cell.trim());
+                        rows.push(row);
+                        row = [];
+                        cell = '';
+                        i++;
+                    } else if (c === '\n' || c === '\r') {
+                        row.push(cell.trim());
+                        rows.push(row);
+                        row = [];
+                        cell = '';
+                    } else {
+                        cell += c;
+                    }
+                }
+            }
+            if (cell.length > 0 || row.length > 0) {
+                row.push(cell.trim());
+                rows.push(row);
+            }
+            return rows;
+        }
+
+        async function loadDatabaseFromSheets() {
+            if (!SHEET_ID || SHEET_ID === '1W7klW4ch7WxMY4s2puN_2ZD9xxOIzdZh51Up0KDW1ZE') {
+                return;
+            }
+
+            try {
+                const baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=`;
+                const [itemsRes, recipesRes] = await Promise.all([
+                    fetch(baseUrl + encodeURIComponent(ITEMS_SHEET_NAME)),
+                    fetch(baseUrl + encodeURIComponent(RECIPES_SHEET_NAME))
+                ]);
+
+                const itemsText = await itemsRes.text();
+                const recipesText = await recipesRes.text();
+
+                if (!itemsRes.ok || itemsText.trim().startsWith('<!DOCTYPE')) {
+                    throw new Error('試算表權限未公開或分頁名稱錯誤');
+                }
+
+                const itemRows = parseCSV(itemsText).slice(1);
+                const newItems = {};
+                const newInitial = [];
+                const catFallbackMap = { dup: '疊字奇觀', huiyi: '會意新字', xingsheng: '形聲字', rare: '進階與生僻' };
+
+                itemRows.forEach(cols => {
+                    const [char, pinyin, cat, structure, desc, isInit, group, badgeIcon] = cols;
+                    if (!char) return;
+                    const initFlag = String(isInit).toUpperCase() === 'TRUE';
+                    const resolvedGroup = group
+                        ? group.trim()
+                        : (initFlag ? '基礎字根' : (catFallbackMap[cat] || '綜合字集'));
+
+                    newItems[char] = {
+                        pinyin: pinyin || '',
+                        cat: cat || 'huiyi',
+                        structure: structure || '會意字',
+                        desc: desc || '',
+                        group: resolvedGroup,
+                        badgeIcon: badgeIcon ? badgeIcon.trim() : '🏅'
+                    };
+                    if (initFlag) newInitial.push(char);
+                });
+
+                const recipeRows = parseCSV(recipesText).slice(1);
+                const newRecipes = {};
+
+                recipeRows.forEach(cols => {
+                    const [ingredients, result] = cols;
+                    if (!ingredients || !result) return;
+                    const sortedKey = ingredients
+                        .split('+')
+                        .map(s => s.trim())
+                        .filter(Boolean)
+                        .sort()
+                        .join('+');
+                    newRecipes[sortedKey] = result.trim();
+                });
+
+                if (Object.keys(newItems).length > 0) {
+                    ITEMS = newItems;
+                    RECIPES = newRecipes;
+                    INITIAL_UNLOCKED = newInitial.length > 0 ? newInitial : Object.keys(newItems).slice(0, 5);
+                    showToast(`☁️ 已同步試算表：${Object.keys(ITEMS).length} 字`);
+                }
+            } catch (err) {
+                console.error(err);
+                showToast(`⚠️ 讀取試算表失敗：${err.message}`);
+            }
+        }
+
+        // ==========================================
+        // 3. 分組統計與徽章計算引擎
+        // ==========================================
+        function getGroupedCollections() {
+            const groups = {};
+            Object.entries(ITEMS).forEach(([char, info]) => {
+                const gName = info.group || '未分類';
+                if (!groups[gName]) {
+                    groups[gName] = {
+                        name: gName,
+                        icon: info.badgeIcon || '🏅',
+                        isBadgeGroup: gName !== '基礎字根',
+                        chars: []
+                    };
+                }
+                if (info.badgeIcon && groups[gName].icon === '🏅') {
+                    groups[gName].icon = info.badgeIcon;
+                }
+                groups[gName].chars.push(char);
+            });
+
+            // 計算每組解鎖進度
+            Object.values(groups).forEach(g => {
+                g.unlockedCount = g.chars.filter(c => unlockedItems.has(c)).length;
+                g.totalCount = g.chars.length;
+                g.completed = g.totalCount > 0 && g.unlockedCount === g.totalCount;
+            });
+
+            return groups;
+        }
+
+        // ==========================================
+        // 4. 遊戲核心互動邏輯
+        // ==========================================
+        window.onload = async () => {
+            await loadDatabaseFromSheets();
+            loadProgress();
+            renderInventory();
+            updateProgress();
+        };
+
+        function countInSlots(id) {
+            return slots.filter(s => s === id).length;
+        }
+
+        function renderInventory() {
+            const listEl = document.getElementById('inventoryList');
+            const search = document.getElementById('searchInput').value.trim().toLowerCase();
+            listEl.innerHTML = '';
+
+            Array.from(unlockedItems).forEach(id => {
+                const item = ITEMS[id];
+                if (!item) return;
+
+                if (currentCategory !== 'all' && item.cat !== currentCategory) return;
+                if (search && !id.includes(search) && !item.pinyin.includes(search) && !(item.group || '').includes(search)) return;
+
+                const count = countInSlots(id);
+                const card = document.createElement('div');
+                card.className = `card ${count > 0 ? 'selected' : ''}`;
+                card.onclick = () => selectCard(id);
+                card.innerHTML = `
+                    <span class="card-char">${id}</span>
+                    <span class="card-symbol">${item.pinyin}</span>
+                    ${count > 0 ? `<span class="card-badge">×${count}</span>` : ''}
+                `;
+                listEl.appendChild(card);
+            });
+        }
+
+        function selectCard(id) {
+            const emptyIndex = slots.indexOf(null);
+            if (emptyIndex !== -1) {
+                slots[emptyIndex] = id;
+            } else {
+                slots[2] = id;
+            }
+            updateSlotsUI();
+            renderInventory();
+        }
+
+        function updateSlotsUI() {
+            const activeCount = slots.filter(Boolean).length;
+            const combineBtn = document.getElementById('combineBtn');
+
+            slots.forEach((charId, idx) => {
+                const slotEl = document.getElementById(`slot${idx}`);
+                if (charId && ITEMS[charId]) {
+                    slotEl.innerHTML = `
+                        <div class="slot-char">${charId}</div>
+                        <div class="slot-sub">${ITEMS[charId].pinyin}</div>
+                    `;
+                } else {
+                    slotEl.innerHTML = idx === 2
+                        ? `<div class="slot-placeholder">爐位 3<br><span style="font-size:0.65rem;">(選填)</span></div>`
+                        : `<div class="slot-placeholder">爐位 ${idx + 1}</div>`;
+                }
+            });
+
+            combineBtn.disabled = activeCount < 2;
+            document.getElementById('furnaceCircle').className = `furnace-circle ${activeCount >= 2 ? 'ready' : ''}`;
+        }
+
+        function clearSlot(slotIdx) {
+            if (!slots[slotIdx]) return;
+            slots[slotIdx] = null;
+            updateSlotsUI();
+            renderInventory();
+        }
+
+        function clearAllSlots() {
+            slots = [null, null, null];
+            updateSlotsUI();
+            renderInventory();
+        }
+
+        function doSynthesis() {
+            const activeChars = slots.filter(Boolean);
+            if (activeChars.length < 2) return;
+
+            const sortedKey = [...activeChars].sort().join('+');
+            const resultId = RECIPES[sortedKey];
+
+            if (resultId && ITEMS[resultId]) {
+                const isNew = !unlockedItems.has(resultId);
+                unlockedItems.add(resultId);
+
+                if (isNew) {
+                    recipeHistory[resultId] = [...activeChars];
+                    const targetGroup = ITEMS[resultId].group;
+                    const groups = getGroupedCollections();
+                    const gObj = groups[targetGroup];
+
+                    // 檢查是否剛好集齊該分類並獲得徽章
+                    if (gObj && gObj.isBadgeGroup && gObj.completed) {
+                        showToast(`🎉 煉出【${resultId}】並獲得徽章：${gObj.icon}【${gObj.name}】！`, true);
+                    } else {
+                        const progressHint = (gObj && gObj.isBadgeGroup) ? `（${gObj.name} ${gObj.unlockedCount}/${gObj.totalCount}）` : '';
+                        showToast(`✨ 熔煉出新字：【${resultId}】${progressHint}`);
+                    }
+                } else {
+                    showToast(`🔥 熔煉成功：【${resultId}】`);
+                }
+
+                saveProgress();
+                updateProgress();
+            } else {
+                showToast(`💨 ${activeChars.join(' + ')} 在爐中化為一縷青煙，沒有組成新字...`);
+            }
+
+            clearAllSlots();
+        }
+
+        function setCategory(cat, el) {
+            currentCategory = cat;
+            document.querySelectorAll('#categoryFilters .cat-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            renderInventory();
+        }
+
+        function filterInventory() {
+            renderInventory();
+        }
+
+        let toastTimer = null;
+        function showToast(msg, isBadge = false) {
+            const toast = document.getElementById('logToast');
+            toast.innerText = msg;
+            toast.className = `log-toast ${isBadge ? 'badge-unlock' : ''}`;
+            toast.style.display = 'block';
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { toast.style.display = 'none'; }, isBadge ? 4200 : 2800);
+        }
+
+        function updateProgress() {
+            const total = Object.keys(ITEMS).length;
+            const current = Array.from(unlockedItems).filter(id => ITEMS[id]).length;
+            const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+
+            document.getElementById('progressFill').style.width = `${pct}%`;
+            document.getElementById('progressText').innerText = `${current} / ${total}`;
+
+            // 更新頂部徽章數量
+            const badgeGroups = Object.values(getGroupedCollections()).filter(g => g.isBadgeGroup);
+            const earnedCount = badgeGroups.filter(g => g.completed).length;
+            document.getElementById('badgeCountText').innerText = `${earnedCount}/${badgeGroups.length}`;
+        }
+
+        // ==========================================
+        // 5. 渲染「已獲得徽章」陳列館 Modal
+        // ==========================================
+        function renderBadgesModal() {
+            const groups = Object.values(getGroupedCollections()).filter(g => g.isBadgeGroup);
+            const earned = groups.filter(g => g.completed);
+            const locked = groups.filter(g => !g.completed);
+
+            document.getElementById('earnedBadgeNum').innerText = earned.length;
+            document.getElementById('lockedBadgeNum').innerText = locked.length;
+
+            const earnedGrid = document.getElementById('earnedBadgesGrid');
+            const lockedGrid = document.getElementById('lockedBadgesGrid');
+
+            if (earned.length === 0) {
+                earnedGrid.innerHTML = `<div style="grid-column:1/-1; color:var(--text-muted); font-size:0.88rem; padding:12px; background:#0f172a; border-radius:8px; text-align:center;">尚未獲得任何徽章，試著集齊「皮膚上的病」（疣、疤、瘤、痘、痢）吧！</div>`;
+            } else {
+                earnedGrid.innerHTML = earned.map(g => createBadgeCardHTML(g, true)).join('');
+            }
+
+            lockedGrid.innerHTML = locked.map(g => createBadgeCardHTML(g, false)).join('');
+        }
+
+        function createBadgeCardHTML(group, isEarned) {
+            const pills = group.chars.map(c => {
+                const has = unlockedItems.has(c);
+                return `<span class="mini-char ${has ? '' : 'missing'}">${has ? c : '？'}</span>`;
+            }).join('');
+
+            return `
+                <div class="badge-card ${isEarned ? '' : 'locked'}">
+                    <div class="badge-emblem">${group.icon}</div>
+                    <div class="badge-name">${group.name}</div>
+                    <div style="font-size:0.78rem; color:${isEarned ? '#fcd34d' : 'var(--text-muted)'};">
+                        ${isEarned ? '✨ 已集齊全套漢字' : `收集進度：${group.unlockedCount} / ${group.totalCount} 字`}
+                    </div>
+                    <div class="badge-chars-pill">${pills}</div>
+                </div>
+            `;
+        }
+
+        // ==========================================
+        // 6. 渲染「主題分類圖鑑」Modal（每類 10 字以內）
+        // ==========================================
+        function setPokedexFilter(filterType, el) {
+            pokedexFilter = filterType;
+            document.querySelectorAll('.pokedex-tabs .cat-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            renderPokedex();
+        }
+
+        function renderPokedex() {
+            const container = document.getElementById('pokedexGroupsContainer');
+            container.innerHTML = '';
+
+            const groups = Object.values(getGroupedCollections());
+
+            groups.forEach(group => {
+                if (pokedexFilter === 'earned' && (!group.isBadgeGroup || !group.completed)) return;
+                if (pokedexFilter === 'incomplete' && (!group.isBadgeGroup || group.completed)) return;
+
+                const section = document.createElement('div');
+                section.className = `group-section ${group.isBadgeGroup && group.completed ? 'completed' : ''}`;
+
+                const statusBadge = !group.isBadgeGroup
+                    ? `<span class="group-status">基礎原料 (${group.unlockedCount}/${group.totalCount})</span>`
+                    : group.completed
+                        ? `<span class="group-status earned">🏆 已獲得徽章【${group.name}】</span>`
+                        : `<span class="group-status">進度 ${group.unlockedCount} / ${group.totalCount}（集齊獲徽章）</span>`;
+
+                const cardsHTML = group.chars.map(id => {
+                    const item = ITEMS[id];
+                    const isUnlocked = unlockedItems.has(id);
+                    return `
+                        <div class="poke-card ${isUnlocked ? '' : 'locked'}">
+                            <div class="poke-title">
+                                <span class="poke-char">${isUnlocked ? id : '？'}</span>
+                                <span style="font-size:0.78rem; color:var(--text-muted);">${isUnlocked ? item.pinyin : '未解鎖'}</span>
+                            </div>
+                            ${isUnlocked ? `<div class="poke-structure">${item.structure}</div>` : ''}
+                            <div class="poke-desc">${isUnlocked ? item.desc : '尚未在熔爐中煉出此字。'}</div>
+                            ${isUnlocked && recipeHistory[id] ? `<button class="btn" style="margin-top:4px; font-size:0.72rem; padding:3px 8px; align-self:flex-start;" onclick="showRecipeTree('${id}')">🌳 查看配方</button>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                section.innerHTML = `
+                    <div class="group-header">
+                        <div class="group-title">${group.icon} ${group.name}</div>
+                        ${statusBadge}
+                    </div>
+                    <div class="pokedex-grid">${cardsHTML}</div>
+                `;
+                container.appendChild(section);
+            });
+        }
+
+        function showRecipeTree(itemId) {
+            const parents = recipeHistory[itemId];
+            if (!parents) return;
+
+            const recipeHTML = parents.map(p => `
+                <div class="card" style="cursor:default;">
+                    <span class="card-char">${p}</span>
+                    <span class="card-symbol">${ITEMS[p] ? ITEMS[p].pinyin : ''}</span>
+                </div>
+            `).join('<span style="font-weight:bold; color:var(--accent-ember);">+</span>');
+
+            const body = document.getElementById('recipeTreeBody');
+            body.innerHTML = `
+                <div style="text-align:center; margin-bottom:16px;">
+                    <div style="font-family:'KaiTi','BiauKai',serif; font-size:3rem; color:var(--accent-gold); font-weight:bold;">${itemId}</div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);">${ITEMS[itemId].pinyin} · ${ITEMS[itemId].structure}</div>
+                </div>
+                <div style="display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+                    ${recipeHTML}
+                </div>
+                <p style="font-size:0.85rem; color:var(--text-muted); text-align:center; line-height:1.5;">
+                    ${ITEMS[itemId].desc}
+                </p>
+            `;
+            openModal('recipeTreeModal');
+        }
+
+        function openModal(id) {
+            if (id === 'pokedexModal') renderPokedex();
+            if (id === 'badgesModal') renderBadgesModal();
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function saveProgress() {
+            localStorage.setItem('hanzi_smelter_unlocked', JSON.stringify(Array.from(unlockedItems)));
+            localStorage.setItem('hanzi_smelter_history', JSON.stringify(recipeHistory));
+        }
+
+        function loadProgress() {
+            const savedUnlocked = localStorage.getItem('hanzi_smelter_unlocked');
+            const savedHistory = localStorage.getItem('hanzi_smelter_history');
+
+            const baseSet = new Set(INITIAL_UNLOCKED);
+            if (savedUnlocked) {
+                JSON.parse(savedUnlocked).forEach(id => baseSet.add(id));
+            }
+            unlockedItems = baseSet;
+            if (savedHistory) recipeHistory = JSON.parse(savedHistory);
+        }
+
+        function resetProgress() {
+            if (confirm('確定要重置所有文字熔煉與徽章進度嗎？')) {
+                localStorage.removeItem('hanzi_smelter_unlocked');
+                localStorage.removeItem('hanzi_smelter_history');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
