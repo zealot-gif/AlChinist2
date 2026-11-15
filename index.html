@@ -151,6 +151,7 @@
             padding: 8px 12px;
             border-radius: 6px;
             outline: none;
+            user-select: text;
         }
 
         .category-filter {
@@ -406,6 +407,42 @@
             box-shadow: 0 0 25px rgba(251, 191, 36, 0.55);
         }
 
+        .log-toast.clickable {
+            cursor: pointer;
+            padding-right: 16px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .log-toast.clickable:hover {
+            transform: translateY(-3px);
+            border-color: #fde047;
+            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45);
+        }
+
+        .toast-tap-hint {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 8px;
+            font-size: 0.78rem;
+            background: rgba(251, 191, 36, 0.22);
+            color: #fde047;
+            border: 1px solid rgba(251, 191, 36, 0.5);
+            border-radius: 12px;
+            vertical-align: middle;
+        }
+
+        .detail-badge-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--accent-blue);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -646,21 +683,6 @@
             border-color: #334155;
         }
 
-        @media (max-width: 768px) {
-            main {
-                flex-direction: column-reverse;
-                height: auto;
-            }
-            .sidebar {
-                width: 100%;
-                height: 45vh;
-                border-right: none;
-                border-top: 1px solid var(--border-color);
-            }
-            .workspace {
-                padding: 24px 10px;
-            }
-        }
         /* 圖鑑底部危險操作區（防誤觸重置） */
         .danger-zone {
             margin-top: 28px;
@@ -748,41 +770,21 @@
         .btn-danger-solid:not(:disabled):hover {
             background: #b91c1c;
         }
-        /* 可點擊的熔煉成功提示框 */
-        .log-toast.clickable {
-            cursor: pointer;
-            padding-right: 16px;
-            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-        }
 
-        .log-toast.clickable:hover {
-            transform: translateY(-3px);
-            border-color: #fde047;
-            box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45);
-        }
-
-        .toast-tap-hint {
-            display: inline-block;
-            margin-left: 8px;
-            padding: 2px 8px;
-            font-size: 0.78rem;
-            background: rgba(251, 191, 36, 0.22);
-            color: #fde047;
-            border: 1px solid rgba(251, 191, 36, 0.5);
-            border-radius: 12px;
-            vertical-align: middle;
-        }
-
-        .detail-badge-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.8rem;
-            padding: 3px 10px;
-            border-radius: 12px;
-            background: rgba(56, 189, 248, 0.12);
-            color: var(--accent-blue);
-            border: 1px solid rgba(56, 189, 248, 0.3);
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column-reverse;
+                height: auto;
+            }
+            .sidebar {
+                width: 100%;
+                height: 45vh;
+                border-right: none;
+                border-top: 1px solid var(--border-color);
+            }
+            .workspace {
+                padding: 24px 10px;
+            }
         }
     </style>
 </head>
@@ -851,7 +853,7 @@
     </main>
 
     <!-- 🏆 已獲得徽章 Modal -->
-    <div class="modal-overlay" id="badgesModal">
+    <div class="modal-overlay" id="badgesModal" onclick="if(event.target === this) closeModal('badgesModal')">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>🏆 徽章陳列館（集齊主題全字解鎖）</h3>
@@ -868,7 +870,7 @@
     </div>
 
     <!-- 📜 分類圖鑑 Modal -->
-    <div class="modal-overlay" id="pokedexModal">
+    <div class="modal-overlay" id="pokedexModal" onclick="if(event.target === this) closeModal('pokedexModal')">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>📜 說文解字：主題分類圖鑑（每類 10 字以內）</h3>
@@ -900,7 +902,7 @@
     </div>
 
     <!-- 🌳 造字配方 Modal -->
-    <div class="modal-overlay" id="recipeTreeModal">
+    <div class="modal-overlay" id="recipeTreeModal" onclick="if(event.target === this) closeModal('recipeTreeModal')">
         <div class="modal-content" style="max-width: 460px;">
             <div class="modal-header">
                 <h3>🌳 造字配方 (Recipe Tree)</h3>
@@ -917,118 +919,42 @@
                 <h3>📖 漢字詳解</h3>
                 <button class="btn" onclick="closeModal('charDetailModal')">✕</button>
             </div>
-            <div class="modal-body" id="charDetailBody">
-                <!-- 動態注入字義說明 -->
-            </div>
+            <div class="modal-body" id="charDetailBody"></div>
         </div>
     </div>
-    
+
     <script>
         // ==========================================
-        // 1. Google 試算表設定區（填入 SHEET_ID 即可同步）
+        // 1. Google 試算表設定區
         // ==========================================
         const SHEET_ID = '1W7klW4ch7WxMY4s2puN_2ZD9xxOIzdZh51Up0KDW1ZE';
         const ITEMS_SHEET_NAME = 'Items';
         const RECIPES_SHEET_NAME = 'Recipes';
 
-        // 內建預設資料庫（包含你舉例的 疒部：疣、疤、瘤、痘、痢，且每類皆在 10 字以內）
+        // 離線或連線異常時的保底字庫
         let ITEMS = {
-            // --- 基礎字根（不計入徽章，作為合成原料）---
             '疒': { pinyin: 'ㄋㄧˋ', cat: 'base', structure: '象形字', desc: '倚靠病床之形，所有疾病相關漢字的部首。', group: '基礎字根' },
             '尤': { pinyin: 'ㄧㄡˊ', cat: 'base', structure: '指事字', desc: '突出、特別之義，亦作形聲字的聲符。', group: '基礎字根' },
             '巴': { pinyin: 'ㄅㄚ', cat: 'base', structure: '象形字', desc: '貼附、緊黏之義，亦作聲符。', group: '基礎字根' },
             '留': { pinyin: 'ㄌㄧㄡˊ', cat: 'base', structure: '會意字', desc: '停留、積聚不散之義。', group: '基礎字根' },
             '豆': { pinyin: 'ㄉㄡˋ', cat: 'base', structure: '象形字', desc: '古代盛食器，後指圓粒狀豆類。', group: '基礎字根' },
             '利': { pinyin: 'ㄌㄧˋ', cat: 'base', structure: '會意字', desc: '以刀割禾，銳利、通順之義。', group: '基礎字根' },
-            '火': { pinyin: 'ㄏㄨㄛˇ', cat: 'base', structure: '象形字', desc: '象火焰向上燃燒之形。', group: '基礎字根' },
-            '水': { pinyin: 'ㄕㄨㄟˇ', cat: 'base', structure: '象形字', desc: '象河川水流蜿蜒之形。', group: '基礎字根' },
-            '木': { pinyin: 'ㄇㄨˋ', cat: 'base', structure: '象形字', desc: '上有枝葉、下有樹根的樹木本字。', group: '基礎字根' },
-            '金': { pinyin: 'ㄐㄧㄣ', cat: 'base', structure: '會意字', desc: '埋藏於土中的金屬礦物。', group: '基礎字根' },
-            '日': { pinyin: 'ㄖˋ', cat: 'base', structure: '象形字', desc: '太陽的輪廓，光明之源。', group: '基礎字根' },
-            '月': { pinyin: 'ㄩㄝˋ', cat: 'base', structure: '象形字', desc: '一彎新月之形。', group: '基礎字根' },
-            '人': { pinyin: 'ㄖㄣˊ', cat: 'base', structure: '象形字', desc: '側面站立的人形。', group: '基礎字根' },
-            '言': { pinyin: 'ㄧㄢˊ', cat: 'base', structure: '會意字', desc: '開口說話、表達心意。', group: '基礎字根' },
-            '口': { pinyin: 'ㄎㄡˇ', cat: 'base', structure: '象形字', desc: '人的嘴巴與出入口。', group: '基礎字根' },
-            '心': { pinyin: 'ㄒㄧㄣ', cat: 'base', structure: '象形字', desc: '心臟與情感思考所在。', group: '基礎字根' },
-            '門': { pinyin: 'ㄇㄣˊ', cat: 'base', structure: '象形字', desc: '左右兩扇門扉相對之形。', group: '基礎字根' },
-
-            // --- 主題 1：【皮膚上的病】（5字）---
             '疣': { pinyin: 'ㄧㄡˊ', cat: 'xingsheng', structure: '半包圍形聲', desc: '皮膚上因病毒感染凸起的小贅生物（瘊子）。', group: '皮膚上的病', badgeIcon: '🩹' },
             '疤': { pinyin: 'ㄅㄚ', cat: 'xingsheng', structure: '半包圍形聲', desc: '皮膚傷口癒合後留下的纖維組織痕跡。', group: '皮膚上的病', badgeIcon: '🩹' },
             '瘤': { pinyin: 'ㄌㄧㄡˊ', cat: 'xingsheng', structure: '半包圍形聲', desc: '組織細胞異常增生積聚而成的腫塊。', group: '皮膚上的病', badgeIcon: '🩹' },
             '痘': { pinyin: 'ㄉㄡˋ', cat: 'xingsheng', structure: '半包圍形聲', desc: '皮膚上形如小豆粒的疹子或痤瘡（青春痘）。', group: '皮膚上的病', badgeIcon: '🩹' },
-            '痢': { pinyin: 'ㄌㄧˋ', cat: 'xingsheng', structure: '半包圍形聲', desc: '腹痛泄瀉、排便不暢的腸道疾病（痢疾）。', group: '皮膚上的病', badgeIcon: '🩹' },
-
-            // --- 主題 2：【烈焰與水澤】（6字）---
-            '炎': { pinyin: 'ㄧㄢˊ', cat: 'dup', structure: '上下二疊', desc: '雙火相疊，火光上騰，天氣酷熱。', group: '烈焰與水澤', badgeIcon: '🌊' },
-            '焱': { pinyin: 'ㄧㄢˋ', cat: 'dup', structure: '品字結構', desc: '三火相聚，火花飛濺、火焰閃耀。', group: '烈焰與水澤', badgeIcon: '🌊' },
-            '燚': { pinyin: 'ㄧˋ', cat: 'rare', structure: '四疊奇字', desc: '四火相疊！形容火勢極其猛烈熾熱。', group: '烈焰與水澤', badgeIcon: '🌊' },
-            '沝': { pinyin: 'ㄓㄨㄟˇ', cat: 'rare', structure: '左右二疊', desc: '二水並流，古同「水」字。', group: '烈焰與水澤', badgeIcon: '🌊' },
-            '淼': { pinyin: 'ㄇㄧㄠˇ', cat: 'dup', structure: '品字結構', desc: '三水浩蕩，形容水勢遼闊無邊無際。', group: '烈焰與水澤', badgeIcon: '🌊' },
-            '淡': { pinyin: 'ㄉㄢˋ', cat: 'huiyi', structure: '左右會意', desc: '以水澆減炎火之勢，引申為清淡、平淡。', group: '烈焰與水澤', badgeIcon: '🌊' },
-
-            // --- 主題 3：【草木與金石】（5字）---
-            '林': { pinyin: 'ㄌㄧㄣˊ', cat: 'dup', structure: '左右二疊', desc: '平地有叢木曰林，兩木成林。', group: '草木與金石', badgeIcon: '🌲' },
-            '森': { pinyin: 'ㄙㄣ', cat: 'dup', structure: '品字結構', desc: '三木成森，樹木叢生、茂密幽深。', group: '草木與金石', badgeIcon: '🌲' },
-            '焚': { pinyin: 'ㄈㄣˊ', cat: 'huiyi', structure: '上下會意', desc: '在樹林（林）下放火（火），意為焚燒。', group: '草木與金石', badgeIcon: '🌲' },
-            '鑫': { pinyin: 'ㄒㄧㄣ', cat: 'dup', structure: '品字結構', desc: '三金疊加，象徵財富興盛、金光閃耀。', group: '草木與金石', badgeIcon: '🌲' },
-            '淦': { pinyin: 'ㄍㄢˋ', cat: 'xingsheng', structure: '左右形聲會意', desc: '本義為水滲入船中，現代網路常作感嘆詞諧音。', group: '草木與金石', badgeIcon: '🌲' },
-
-            // --- 主題 4：【日月與眾生】（6字）---
-            '昌': { pinyin: 'ㄔㄤ', cat: 'dup', structure: '上下二疊', desc: '雙日並明，陽光普照、興旺繁榮。', group: '日月與眾生', badgeIcon: '☀️' },
-            '晶': { pinyin: 'ㄐㄧㄥ', cat: 'dup', structure: '品字結構', desc: '三日同輝，光亮剔透（如水晶）。', group: '日月與眾生', badgeIcon: '☀️' },
-            '明': { pinyin: 'ㄇㄧㄥˊ', cat: 'huiyi', structure: '左右會意', desc: '日與月交相輝映，帶來光明。', group: '日月與眾生', badgeIcon: '☀️' },
-            '從': { pinyin: 'ㄘㄨㄥˊ', cat: 'dup', structure: '左右二疊', desc: '一人在後跟隨一人，意為跟從。', group: '日月與眾生', badgeIcon: '☀️' },
-            '眾': { pinyin: 'ㄓㄨㄥˋ', cat: 'dup', structure: '品字結構', desc: '三人成眾，表示人數眾多。', group: '日月與眾生', badgeIcon: '☀️' },
-            '信': { pinyin: 'ㄒㄧㄣˋ', cat: 'huiyi', structure: '左右會意', desc: '人言為信，說話真實不欺，誠實守信。', group: '日月與眾生', badgeIcon: '☀️' },
-
-            // --- 主題 5：【門裡乾坤】（5字）---
-            '問': { pinyin: 'ㄨㄣˋ', cat: 'huiyi', structure: '半包圍會意', desc: '站在門前開口詢問，即「發問」。', group: '門裡乾坤', badgeIcon: '🚪' },
-            '間': { pinyin: 'ㄐㄧㄢ', cat: 'huiyi', structure: '半包圍會意', desc: '陽光從門縫中透入，引申為空間與時間。', group: '門裡乾坤', badgeIcon: '🚪' },
-            '閒': { pinyin: 'ㄒㄧㄢˊ', cat: 'huiyi', structure: '半包圍會意', desc: '夜晚月光照進門扉，清靜悠閒。', group: '門裡乾坤', badgeIcon: '🚪' },
-            '閃': { pinyin: 'ㄕㄢˇ', cat: 'huiyi', structure: '半包圍會意', desc: '人從門中快速一晃而過，閃現。', group: '門裡乾坤', badgeIcon: '🚪' },
-            '悶': { pinyin: 'ㄇㄣˋ', cat: 'huiyi', structure: '半包圍會意', desc: '心被緊鎖在門內，鬱結煩悶。', group: '門裡乾坤', badgeIcon: '🚪' }
+            '痢': { pinyin: 'ㄌㄧˋ', cat: 'xingsheng', structure: '半包圍形聲', desc: '腹痛泄瀉、排便不暢的腸道疾病（痢疾）。', group: '皮膚上的病', badgeIcon: '🩹' }
         };
 
         let RECIPES = {
-            // 皮膚上的病
             '疒+尤': '疣',
             '巴+疒': '疤',
             '疒+留': '瘤',
             '疒+豆': '痘',
-            '利+疒': '痢',
-            // 烈焰與水澤
-            '火+火': '炎',
-            '火+火+火': '焱',
-            '炎+炎': '燚',
-            '水+水': '沝',
-            '水+水+水': '淼',
-            '水+炎': '淡',
-            // 草木與金石
-            '木+木': '林',
-            '木+木+木': '森',
-            '林+火': '焚',
-            '金+金+金': '鑫',
-            '水+金': '淦',
-            // 日月與眾生
-            '日+日': '昌',
-            '日+日+日': '晶',
-            '日+月': '明',
-            '人+人': '從',
-            '人+人+人': '眾',
-            '人+言': '信',
-            // 門裡乾坤
-            '口+門': '問',
-            '日+門': '間',
-            '月+門': '閒',
-            '人+門': '閃',
-            '心+門': '悶'
+            '利+疒': '痢'
         };
 
-        let INITIAL_UNLOCKED = [
-            '疒', '尤', '巴', '留', '豆', '利',
-            '火', '水', '木', '金', '日', '月', '人', '言', '口', '心', '門'
-        ];
+        let INITIAL_UNLOCKED = ['疒', '尤', '巴', '留', '豆', '利'];
 
         // 遊戲狀態 State
         let unlockedItems = new Set();
@@ -1038,7 +964,7 @@
         let pokedexFilter = 'all';
 
         // ==========================================
-        // 2. 試算表 CSV 讀取與解析引擎（支援 group 與 badge_icon 欄位）
+        // 2. 試算表 CSV 讀取與解析引擎
         // ==========================================
         function parseCSV(text) {
             const rows = [];
@@ -1179,7 +1105,6 @@
                 groups[gName].chars.push(char);
             });
 
-            // 計算每組解鎖進度
             Object.values(groups).forEach(g => {
                 g.unlockedCount = g.chars.filter(c => unlockedItems.has(c)).length;
                 g.totalCount = g.chars.length;
@@ -1285,7 +1210,6 @@
                 const isNew = !unlockedItems.has(resultId);
                 unlockedItems.add(resultId);
 
-                // 無論是否為新字，都將本次原料組合帶給提示框以供點擊查看
                 const detailData = {
                     charId: resultId,
                     ingredients: [...activeChars]
@@ -1316,6 +1240,17 @@
             clearAllSlots();
         }
 
+        function setCategory(cat, el) {
+            currentCategory = cat;
+            document.querySelectorAll('#categoryFilters .cat-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            renderInventory();
+        }
+
+        function filterInventory() {
+            renderInventory();
+        }
+
         let toastTimer = null;
         function showToast(msg, isBadge = false, detailData = null) {
             const toast = document.getElementById('logToast');
@@ -1335,7 +1270,6 @@
             }
 
             toast.style.display = 'block';
-            // 延長顯示至 5 秒，方便玩家從容點擊
             toastTimer = setTimeout(() => { toast.style.display = 'none'; }, isBadge ? 5500 : 4800);
         }
 
@@ -1386,27 +1320,6 @@
             openModal('charDetailModal');
         }
 
-        function setCategory(cat, el) {
-            currentCategory = cat;
-            document.querySelectorAll('#categoryFilters .cat-chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            renderInventory();
-        }
-
-        function filterInventory() {
-            renderInventory();
-        }
-
-        let toastTimer = null;
-        function showToast(msg, isBadge = false) {
-            const toast = document.getElementById('logToast');
-            toast.innerText = msg;
-            toast.className = `log-toast ${isBadge ? 'badge-unlock' : ''}`;
-            toast.style.display = 'block';
-            if (toastTimer) clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => { toast.style.display = 'none'; }, isBadge ? 4200 : 2800);
-        }
-
         function updateProgress() {
             const total = Object.keys(ITEMS).length;
             const current = Array.from(unlockedItems).filter(id => ITEMS[id]).length;
@@ -1415,7 +1328,6 @@
             document.getElementById('progressFill').style.width = `${pct}%`;
             document.getElementById('progressText').innerText = `${current} / ${total}`;
 
-            // 更新頂部徽章數量
             const badgeGroups = Object.values(getGroupedCollections()).filter(g => g.isBadgeGroup);
             const earnedCount = badgeGroups.filter(g => g.completed).length;
             document.getElementById('badgeCountText').innerText = `${earnedCount}/${badgeGroups.length}`;
@@ -1436,7 +1348,7 @@
             const lockedGrid = document.getElementById('lockedBadgesGrid');
 
             if (earned.length === 0) {
-                earnedGrid.innerHTML = `<div style="grid-column:1/-1; color:var(--text-muted); font-size:0.88rem; padding:12px; background:#0f172a; border-radius:8px; text-align:center;">尚未獲得任何徽章，試著集齊「皮膚上的病」（疣、疤、瘤、痘、痢）吧！</div>`;
+                earnedGrid.innerHTML = `<div style="grid-column:1/-1; color:var(--text-muted); font-size:0.88rem; padding:12px; background:#0f172a; border-radius:8px; text-align:center;">尚未獲得任何徽章，試著集齊任一主題的所有漢字吧！</div>`;
             } else {
                 earnedGrid.innerHTML = earned.map(g => createBadgeCardHTML(g, true)).join('');
             }
@@ -1455,7 +1367,7 @@
                     <div class="badge-emblem">${group.icon}</div>
                     <div class="badge-name">${group.name}</div>
                     <div style="font-size:0.78rem; color:${isEarned ? '#fcd34d' : 'var(--text-muted)'};">
-                        ${isEarned ? '✨ 已集齊' : `收集進度：${group.unlockedCount} / ${group.totalCount} 字`}
+                        ${isEarned ? '✨ 已集齊全套漢字' : `收集進度：${group.unlockedCount} / ${group.totalCount} 字`}
                     </div>
                     <div class="badge-chars-pill">${pills}</div>
                 </div>
@@ -1463,7 +1375,7 @@
         }
 
         // ==========================================
-        // 6. 渲染「主題分類圖鑑」Modal（每類 10 字以內）
+        // 6. 渲染「主題分類圖鑑」Modal
         // ==========================================
         function setPokedexFilter(filterType, el) {
             pokedexFilter = filterType;
@@ -1553,7 +1465,6 @@
 
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
-            // 關閉圖鑑時自動收合並重新鎖定重置面板
             if (id === 'pokedexModal') {
                 toggleResetPanel(false);
             }
@@ -1602,14 +1513,6 @@
             }
             unlockedItems = baseSet;
             if (savedHistory) recipeHistory = JSON.parse(savedHistory);
-        }
-
-        function resetProgress() {
-            if (confirm('確定要重置所有文字熔煉與徽章進度嗎？')) {
-                localStorage.removeItem('hanzi_smelter_unlocked');
-                localStorage.removeItem('hanzi_smelter_history');
-                location.reload();
-            }
         }
     </script>
 </body>
