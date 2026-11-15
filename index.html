@@ -815,11 +815,11 @@
             </div>
             <div class="category-filter" id="categoryFilters">
                 <div class="cat-chip active" onclick="setCategory('all', this)">全部</div>
-                <div class="cat-chip" onclick="setCategory('base', this)">基礎字根</div>
-                <div class="cat-chip" onclick="setCategory('dup', this)">疊字奇觀</div>
-                <div class="cat-chip" onclick="setCategory('huiyi', this)">會意新字</div>
-                <div class="cat-chip" onclick="setCategory('xingsheng', this)">形聲字</div>
-                <div class="cat-chip" onclick="setCategory('rare', this)">進階與生僻</div>
+                <div class="cat-chip" onclick="setCategory('自然', this)">自然</div>
+                <div class="cat-chip" onclick="setCategory('抽象', this)">抽象</div>
+                <div class="cat-chip" onclick="setCategory('草蟲', this)">草蟲</div>
+                <div class="cat-chip" onclick="setCategory('禽獸', this)">禽獸</div>
+                <div class="cat-chip" onclick="setCategory('部首', this)">部首</div>
             </div>
             <div class="inventory-list" id="inventoryList"></div>
         </aside>
@@ -1014,7 +1014,30 @@
             return rows;
         }
 
+        // 支援中文名稱與英文代碼的多重分類解析器（可用 、 , / 隔開）
+        const CAT_ALIAS = {
+            '自然': '自然', 'nature': '自然',
+            '抽象': '抽象', 'abstract': '抽象',
+            '草蟲': '草蟲', 'plant': '草蟲', 'insect': '草蟲',
+            '禽獸': '禽獸', 'beast': '禽獸', 'animal': '禽獸',
+            '部首': '部首', 'radical': '部首', 'base': '部首'
+        };
+
+        function parseCategories(rawCat) {
+            if (!rawCat) return [];
+            return String(rawCat)
+                .split(/[,，、\/+|]+/)
+                .map(s => s.trim())
+                .filter(Boolean)
+                .map(s => CAT_ALIAS[s.toLowerCase()] || s);
+        }
+
         async function loadDatabaseFromSheets() {
+            // 先將內建保底字庫轉為陣列格式
+            Object.values(ITEMS).forEach(item => {
+                if (!item.cats) item.cats = parseCategories(item.cat || '部首');
+            });
+
             if (!SHEET_ID || SHEET_ID === 'YOUR_GOOGLE_SHEET_ID') {
                 return;
             }
@@ -1036,19 +1059,20 @@
                 const itemRows = parseCSV(itemsText).slice(1);
                 const newItems = {};
                 const newInitial = [];
-                const catFallbackMap = { dup: '疊字奇觀', huiyi: '會意新字', xingsheng: '形聲字', rare: '進階與生僻' };
 
                 itemRows.forEach(cols => {
                     const [char, pinyin, cat, structure, desc, isInit, group, badgeIcon] = cols;
                     if (!char) return;
                     const initFlag = String(isInit).toUpperCase() === 'TRUE';
+                    // 保留所有 group 徽章設定；未填 group 且為初始字根者歸入「基礎字根」
                     const resolvedGroup = group
                         ? group.trim()
-                        : (initFlag ? '基礎字根' : (catFallbackMap[cat] || '綜合字集'));
+                        : (initFlag ? '基礎字根' : '綜合字集');
 
                     newItems[char] = {
                         pinyin: pinyin || '',
-                        cat: cat || 'huiyi',
+                        cat: cat || '',
+                        cats: parseCategories(cat),
                         structure: structure || '會意字',
                         desc: desc || '',
                         group: resolvedGroup,
@@ -1137,8 +1161,11 @@
                 const item = ITEMS[id];
                 if (!item) return;
 
-                if (currentCategory !== 'all' && item.cat !== currentCategory) return;
-                if (search && !id.includes(search) && !item.pinyin.includes(search) && !(item.group || '').includes(search)) return;
+                // 只要該字的 cats 陣列包含目前選取的分類，就會顯示出來
+                if (currentCategory !== 'all' && !(item.cats && item.cats.includes(currentCategory))) return;
+
+                const catText = (item.cats || []).join(' ');
+                if (search && !id.includes(search) && !item.pinyin.includes(search) && !(item.group || '').includes(search) && !catText.includes(search)) return;
 
                 const count = countInSlots(id);
                 const card = document.createElement('div');
@@ -1299,6 +1326,7 @@
                     <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:8px;">
                         <span class="detail-badge-tag">📐 ${item.structure}</span>
                         ${item.group ? `<span class="detail-badge-tag">${item.badgeIcon || '🏷️'} ${item.group}</span>` : ''}
+                        ${item.cats && item.cats.length ? `<span class="detail-badge-tag">🗂️ ${item.cats.join('、')}</span>` : ''}
                     </div>
                 </div>
 
