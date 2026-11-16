@@ -47,6 +47,7 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .title-group h1 {
@@ -157,6 +158,7 @@
         .search-box {
             padding: 12px;
             border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
 
         .search-box input {
@@ -176,6 +178,7 @@
             padding: 8px 12px;
             overflow-x: auto;
             border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
 
         .cat-chip {
@@ -198,7 +201,8 @@
             flex: 1;
             min-height: 0;
             overflow-y: auto;
-            padding: 12px 12px 24px;
+            -webkit-overflow-scrolling: touch;
+            padding: 12px 12px 28px;
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
@@ -261,6 +265,7 @@
             height: 100%;
             min-height: 0;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -288,6 +293,7 @@
             position: relative;
             margin-bottom: 18px;
             transition: all 0.3s;
+            flex-shrink: 0;
         }
 
         .furnace-circle.ready {
@@ -359,6 +365,7 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .combine-btn {
@@ -402,7 +409,7 @@
             border-color: var(--text-muted);
         }
 
-        /* 提示通知 Log（改置於工作檯頂部，避免遮擋下方熔煉按鈕） */
+        /* 提示通知 Log（置於工作檯頂部，避免遮擋下方熔煉按鈕） */
         .log-toast {
             position: absolute;
             top: 14px;
@@ -435,7 +442,7 @@
         }
 
         .log-toast.clickable:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
             border-color: #fde047;
             box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45);
         }
@@ -466,6 +473,11 @@
 
         @keyframes fadeInDown {
             from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -505,7 +517,48 @@
         .modal-body {
             padding: 20px;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             flex: 1;
+        }
+
+        /* 公告通知卡片樣式 */
+        .notice-card {
+            background: #131c2e;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+        }
+
+        .notice-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .notice-card-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+
+        .notice-card-date {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .notice-card-content {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            line-height: 1.65;
+            white-space: pre-line;
+            user-select: text;
         }
 
         /* 登入 / 註冊表單樣式 */
@@ -589,7 +642,7 @@
             color: #7dd3fc;
         }
 
-        /* 圖鑑分組區塊樣式 */
+        /* 圖鑑分組區塊樣式（支援預設縮合） */
         .pokedex-tabs {
             display: flex;
             gap: 8px;
@@ -930,6 +983,7 @@
             background: #b91c1c;
         }
 
+        /* 手機與窄螢幕響應式配置 */
         @media (max-width: 768px) {
             body {
                 position: fixed;
@@ -954,6 +1008,7 @@
             .workspace {
                 flex: 0 0 auto;
                 height: auto;
+                overflow: visible;
                 padding: 10px 10px 12px;
             }
             .workspace-hint {
@@ -1012,49 +1067,9 @@
                 padding: 6px 10px;
             }
             .inventory-list {
-                padding: 8px 10px calc(64px + env(safe-area-inset-bottom, 0px));
+                padding: 8px 10px calc(72px + env(safe-area-inset-bottom, 0px));
                 gap: 6px;
             }
-        }
-        }
-        /* 公告通知卡片樣式 */
-        .notice-card {
-            background: #131c2e;
-            border: 1px solid var(--border-color);
-            border-left: 4px solid var(--accent-gold);
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 12px;
-        }
-
-        .notice-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .notice-card-title {
-            font-size: 1rem;
-            font-weight: bold;
-            color: var(--accent-gold);
-        }
-
-        .notice-card-date {
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            white-space: nowrap;
-        }
-
-        .notice-card-content {
-            font-size: 0.9rem;
-            color: var(--text-main);
-            line-height: 1.65;
-            white-space: pre-line;
-            user-select: text;
         }
     </style>
 </head>
@@ -1216,18 +1231,18 @@
             <div class="modal-body" id="noticeModalBody"></div>
         </div>
     </div>
-    
+
     <script>
         // ==========================================
         // 1. Google 試算表與 Apps Script 設定區
         // ==========================================
         const SHEET_ID = '1W7klW4ch7WxMY4s2puN_2ZD9xxOIzdZh51Up0KDW1ZE';
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwPnMr9Rxah0xv7in0-EIcrrEB9VBitZVXaRGWvA1tCkiq6KA4_58c8i1wUirT_K6KOg/exec'; // 👈 請貼上步驟一部署的網頁應用程式 URL（結尾為 /exec）
+        const GAS_WEB_APP_URL = 'YOUR_GAS_WEB_APP_URL'; // 👈 請貼回你的 Apps Script 網頁應用程式 URL（結尾為 /exec）
         const ITEMS_SHEET_NAME = 'Items';
         const RECIPES_SHEET_NAME = 'Recipes';
         const NOTICES_SHEET_NAME = 'Notices';
         let NOTICES = [];
-        
+
         // 離線或連線異常時的保底字庫
         let ITEMS = {
             '疒': { pinyin: 'ㄋㄧˋ', cats: ['部首'], structure: '象形字', desc: '倚靠病床之形，所有疾病相關漢字的部首。', groups: ['基礎字根'], groupIcons: [''] },
@@ -1259,8 +1274,8 @@
         let slots = [null, null, null];
         let currentCategory = 'all';
         let pokedexFilter = 'all';
-        let currentUser = null; // { username, passwordHash, lastSync }
-        let authMode = 'login'; // 'login' | 'register'
+        let currentUser = null;
+        let authMode = 'login';
         let cloudSyncTimer = null;
 
         // ==========================================
@@ -1427,7 +1442,6 @@
                     ITEMS = newItems;
                     RECIPES = newRecipes;
                     INITIAL_UNLOCKED = newInitial.length > 0 ? newInitial : Object.keys(newItems).slice(0, 5);
-                    showToast(`☁️ 已同步字庫：${Object.keys(ITEMS).length} 字`);
                 }
             } catch (err) {
                 console.error(err);
@@ -1436,7 +1450,7 @@
         }
 
         // ==========================================
-        // 3. 使用者登入、註冊與雲端存檔同步引擎
+        // 3. 使用者登入、註冊與雲端存檔同步引擎（背景靜默同步）
         // ==========================================
         async function hashPassword(password) {
             const salted = 'HanziSmelter_Salt_2026_' + password;
@@ -1470,12 +1484,12 @@
             return await res.json();
         }
 
-        function updateUserHeaderUI(syncing = false) {
+        function updateUserHeaderUI() {
             const btn = document.getElementById('userAuthBtn');
             if (!btn) return;
             if (currentUser) {
                 btn.className = 'btn btn-user-logged';
-                btn.innerText = syncing ? `☁️ 同步中...` : `👤 ${currentUser.username}`;
+                btn.innerText = `👤 ${currentUser.username}`;
             } else {
                 btn.className = 'btn';
                 btn.innerText = '👤 登入 / 註冊';
@@ -1500,12 +1514,12 @@
                     <div style="text-align:center; padding:10px 0 18px;">
                         <div style="font-size:2.4rem; margin-bottom:6px;">🧙‍♂️</div>
                         <div style="font-size:1.15rem; font-weight:bold; color:var(--accent-green);">
-                            ${currentUser.username}
+                            ${escapeHTML(currentUser.username)}
                         </div>
                         <div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">
                             已連線至 Google 試算表雲端存檔
                         </div>
-                        ${currentUser.lastSync ? `<div style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">上次同步：${currentUser.lastSync}</div>` : ''}
+                        ${currentUser.lastSync ? `<div style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">上次同步：${escapeHTML(currentUser.lastSync)}</div>` : ''}
                     </div>
                     <div id="authStatusMsg" class="auth-status"></div>
                     <div style="display:flex; flex-direction:column; gap:10px;">
@@ -1592,7 +1606,6 @@
                     return;
                 }
 
-                // 登入成功：合併雲端與本機進度，確保兩邊戰果都不遺失
                 if (authMode === 'login') {
                     if (Array.isArray(result.unlocked)) {
                         result.unlocked.forEach(c => unlockedItems.add(c));
@@ -1609,14 +1622,13 @@
                 };
                 localStorage.setItem('hanzi_smelter_auth', JSON.stringify({ username, passwordHash }));
 
-                // 將合併後的最新進度寫回本機與雲端
                 localStorage.setItem('hanzi_smelter_unlocked', JSON.stringify(Array.from(unlockedItems)));
                 localStorage.setItem('hanzi_smelter_history', JSON.stringify(recipeHistory));
                 if (authMode === 'login') {
                     await syncToCloud();
                 }
 
-                updateUserHeaderUI(false);
+                updateUserHeaderUI();
                 renderInventory();
                 updateProgress();
                 closeModal('authModal');
@@ -1664,7 +1676,7 @@
         function logoutUser() {
             currentUser = null;
             localStorage.removeItem('hanzi_smelter_auth');
-            updateUserHeaderUI(false);
+            updateUserHeaderUI();
             closeModal('authModal');
             showToast('👋 已登出雲端帳號（本機進度仍保留）');
         }
@@ -1678,7 +1690,7 @@
                 if (!username || !passwordHash) return;
 
                 currentUser = { username, passwordHash, lastSync: '' };
-                updateUserHeaderUI(false);
+                updateUserHeaderUI();
 
                 const res = await callGasApi({ action: 'login', username, passwordHash });
                 if (res.success) {
@@ -1698,7 +1710,7 @@
             } catch (err) {
                 console.error('自動恢復登入狀態失敗:', err);
             } finally {
-                updateUserHeaderUI(false);
+                updateUserHeaderUI();
             }
         }
 
@@ -1736,6 +1748,14 @@
             });
 
             return groups;
+        }
+
+        function sortMiscToBottom(list) {
+            return [...list].sort((a, b) => {
+                if (a.name === '綜合字集') return 1;
+                if (b.name === '綜合字集') return -1;
+                return 0;
+            });
         }
 
         // ==========================================
@@ -1981,7 +2001,7 @@
         }
 
         // ==========================================
-        // 6. 渲染「已獲得徽章」陳列館 Modal（支援收闔/展開）
+        // 6. 渲染「已獲得徽章」陳列館 Modal（支援收闔/展開＋綜合字集置底）
         // ==========================================
         let expandedBadges = new Set();
 
@@ -1992,14 +2012,6 @@
                 expandedBadges.add(groupName);
             }
             renderBadgesModal();
-        }
-
-        function sortMiscToBottom(list) {
-            return [...list].sort((a, b) => {
-                if (a.name === '綜合字集') return 1;
-                if (b.name === '綜合字集') return -1;
-                return 0;
-            });
         }
 
         function renderBadgesModal() {
@@ -2064,35 +2076,7 @@
             `;
         }
 
-            const pills = group.chars.map(c => {
-                const has = unlockedItems.has(c);
-                return `<span class="mini-char ${has ? '' : 'missing'}">${has ? c : '？'}</span>`;
-            }).join('');
-
-            if (isEarned) {
-                return `
-                    <div class="badge-card earned-toggle expanded" data-group="${safeName}" onclick="toggleBadgeExpand(this.dataset.group)" title="點擊收闔徽章">
-                        <div class="badge-emblem">${group.icon}</div>
-                        <div class="badge-name">${group.name} <span class="badge-caret">▴</span></div>
-                        <div style="font-size:0.78rem; color:#fcd34d;">✨ 已集齊全套漢字（點擊收闔）</div>
-                        <div class="badge-chars-pill">${pills}</div>
-                    </div>
-                `;
-            }
-
-            return `
-                <div class="badge-card locked">
-                    <div class="badge-emblem">${group.icon}</div>
-                    <div class="badge-name">${group.name}</div>
-                    <div style="font-size:0.78rem; color:var(--text-muted);">
-                        收集進度：${group.unlockedCount} / ${group.totalCount} 字
-                    </div>
-                    <div class="badge-chars-pill">${pills}</div>
-                </div>
-            `;
-        }
-
-       // ==========================================
+        // ==========================================
         // 7. 渲染「主題分類圖鑑」Modal（預設全部縮合＋綜合字集置底）
         // ==========================================
         let expandedPokedexGroups = new Set();
@@ -2197,6 +2181,9 @@
             openModal('recipeTreeModal');
         }
 
+        // ==========================================
+        // 8. 公告渲染與通用視窗開關
+        // ==========================================
         function escapeHTML(str) {
             return String(str)
                 .replace(/&/g, '&amp;')
