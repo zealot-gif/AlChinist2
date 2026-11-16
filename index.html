@@ -394,20 +394,21 @@
             border-color: var(--text-muted);
         }
 
-        /* 提示通知 Log */
+        /* 提示通知 Log（改置於工作檯頂部，避免遮擋下方熔煉按鈕） */
         .log-toast {
             position: absolute;
-            bottom: 20px;
-            background: rgba(30, 41, 59, 0.96);
+            top: 14px;
+            bottom: auto;
+            background: rgba(30, 41, 59, 0.97);
             border: 1px solid var(--accent-gold);
-            padding: 12px 22px;
+            padding: 10px 18px;
             border-radius: 10px;
-            font-size: 0.92rem;
+            font-size: 0.9rem;
             display: none;
-            animation: fadeIn 0.25s forwards;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            animation: fadeInDown 0.25s forwards;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.55);
             text-align: center;
-            max-width: 90%;
+            max-width: 92%;
             z-index: 20;
         }
 
@@ -455,8 +456,8 @@
             border: 1px solid rgba(56, 189, 248, 0.3);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -968,9 +969,10 @@
                 font-size: 0.8rem;
             }
             .log-toast {
-                bottom: 8px;
-                padding: 8px 14px;
-                font-size: 0.82rem;
+                top: 6px;
+                bottom: auto;
+                padding: 7px 12px;
+                font-size: 0.8rem;
             }
             .sidebar {
                 flex: 1;
@@ -1535,7 +1537,6 @@
 
         async function syncToCloud() {
             if (!currentUser) return;
-            updateUserHeaderUI(true);
             try {
                 const res = await callGasApi({
                     action: 'sync',
@@ -1549,8 +1550,6 @@
                 }
             } catch (err) {
                 console.error('雲端同步失敗:', err);
-            } finally {
-                updateUserHeaderUI(false);
             }
         }
 
@@ -1587,7 +1586,7 @@
                 if (!username || !passwordHash) return;
 
                 currentUser = { username, passwordHash, lastSync: '' };
-                updateUserHeaderUI(true);
+                updateUserHeaderUI(false);
 
                 const res = await callGasApi({ action: 'login', username, passwordHash });
                 if (res.success) {
