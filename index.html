@@ -85,6 +85,7 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         button.btn {
@@ -121,6 +122,16 @@
         }
         button.btn-badge:hover {
             background: linear-gradient(135deg, #92400e, #d97706);
+        }
+
+        button.btn-user-logged {
+            background: rgba(16, 185, 129, 0.16);
+            border-color: var(--accent-green);
+            color: #a7f3d0;
+            font-weight: bold;
+        }
+        button.btn-user-logged:hover {
+            background: rgba(16, 185, 129, 0.28);
         }
 
         /* 主要遊玩區域 */
@@ -488,6 +499,87 @@
             flex: 1;
         }
 
+        /* 登入 / 註冊表單樣式 */
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 18px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .auth-tab.active {
+            color: var(--accent-gold);
+            font-weight: bold;
+            border-bottom-color: var(--accent-gold);
+        }
+
+        .auth-field {
+            margin-bottom: 14px;
+        }
+
+        .auth-field label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .auth-field input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            outline: none;
+            user-select: text;
+        }
+
+        .auth-field input:focus {
+            border-color: var(--accent-gold);
+        }
+
+        .auth-status {
+            font-size: 0.85rem;
+            margin-bottom: 14px;
+            padding: 9px 12px;
+            border-radius: 6px;
+            display: none;
+            line-height: 1.45;
+        }
+
+        .auth-status.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+
+        .auth-status.success {
+            display: block;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            color: #6ee7b7;
+        }
+
+        .auth-status.info {
+            display: block;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #7dd3fc;
+        }
+
         /* 圖鑑分組區塊樣式 */
         .pokedex-tabs {
             display: flex;
@@ -594,7 +686,7 @@
             align-self: flex-start;
         }
 
-        /* 徽章陳列館樣式 */
+        /* 徽章陳列館樣式（支援收闔/展開） */
         .badge-section-title {
             font-size: 1rem;
             color: var(--accent-gold);
@@ -602,6 +694,14 @@
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .earned-badges-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 24px;
         }
 
         .badges-grid {
@@ -623,6 +723,47 @@
             gap: 8px;
             box-shadow: 0 4px 16px rgba(251, 191, 36, 0.18);
             position: relative;
+        }
+
+        .badge-card.earned-toggle {
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .badge-card.earned-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(251, 191, 36, 0.32);
+        }
+
+        .badge-card.collapsed {
+            flex-direction: row;
+            padding: 8px 16px;
+            border-radius: 999px;
+            gap: 8px;
+            text-align: left;
+        }
+
+        .badge-compact-icon {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .badge-compact-name {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+
+        .badge-caret {
+            font-size: 0.75rem;
+            color: #fcd34d;
+            opacity: 0.85;
+            margin-left: 2px;
+        }
+
+        .badge-card.expanded {
+            flex: 1 1 260px;
+            max-width: 100%;
         }
 
         .badge-card.locked {
@@ -787,57 +928,6 @@
                 padding: 24px 10px;
             }
         }
-        /* 已獲得徽章：收闔（圖示＋文字膠囊）與展開切換樣式 */
-        .earned-badges-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: flex-start;
-            margin-bottom: 24px;
-        }
-
-        .badge-card.earned-toggle {
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .badge-card.earned-toggle:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 18px rgba(251, 191, 36, 0.32);
-        }
-
-        /* 收闔狀態：只顯示圖示與文字 */
-        .badge-card.collapsed {
-            flex-direction: row;
-            padding: 8px 16px;
-            border-radius: 999px;
-            gap: 8px;
-            text-align: left;
-        }
-
-        .badge-compact-icon {
-            font-size: 1.2rem;
-            line-height: 1;
-        }
-
-        .badge-compact-name {
-            font-size: 0.95rem;
-            font-weight: bold;
-            color: var(--accent-gold);
-        }
-
-        .badge-caret {
-            font-size: 0.75rem;
-            color: #fcd34d;
-            opacity: 0.85;
-            margin-left: 2px;
-        }
-
-        /* 展開狀態：顯示完整徽章與字庫 */
-        .badge-card.expanded {
-            flex: 1 1 260px;
-            max-width: 100%;
-        }
     </style>
 </head>
 <body>
@@ -856,6 +946,7 @@
         <div class="btn-group">
             <button class="btn btn-badge" onclick="openModal('badgesModal')">🏆 已獲得徽章 (<span id="badgeCountText">0/0</span>)</button>
             <button class="btn btn-primary" onclick="openModal('pokedexModal')">📜 分類圖鑑</button>
+            <button class="btn" id="userAuthBtn" onclick="openAuthModal()">👤 登入 / 註冊</button>
         </div>
     </header>
 
@@ -903,6 +994,17 @@
             <div class="log-toast" id="logToast"></div>
         </section>
     </main>
+
+    <!-- 👤 帳號登入與雲端同步 Modal -->
+    <div class="modal-overlay" id="authModal" onclick="if(event.target === this) closeModal('authModal')">
+        <div class="modal-content" style="max-width: 420px;">
+            <div class="modal-header">
+                <h3>👤 雲端帳號與進度同步</h3>
+                <button class="btn" onclick="closeModal('authModal')">✕</button>
+            </div>
+            <div class="modal-body" id="authModalBody"></div>
+        </div>
+    </div>
 
     <!-- 🏆 已獲得徽章 Modal -->
     <div class="modal-overlay" id="badgesModal" onclick="if(event.target === this) closeModal('badgesModal')">
@@ -977,9 +1079,10 @@
 
     <script>
         // ==========================================
-        // 1. Google 試算表設定區
+        // 1. Google 試算表與 Apps Script 設定區
         // ==========================================
         const SHEET_ID = '1W7klW4ch7WxMY4s2puN_2ZD9xxOIzdZh51Up0KDW1ZE';
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwPnMr9Rxah0xv7in0-EIcrrEB9VBitZVXaRGWvA1tCkiq6KA4_58c8i1wUirT_K6KOg/exec'; // 👈 請貼上步驟一部署的網頁應用程式 URL（結尾為 /exec）
         const ITEMS_SHEET_NAME = 'Items';
         const RECIPES_SHEET_NAME = 'Recipes';
 
@@ -1008,12 +1111,15 @@
 
         let INITIAL_UNLOCKED = ['疒', '尤', '巴', '留', '豆', '利'];
 
-        // 遊戲狀態 State
+        // 遊戲與使用者狀態 State
         let unlockedItems = new Set();
         let recipeHistory = {};
         let slots = [null, null, null];
         let currentCategory = 'all';
         let pokedexFilter = 'all';
+        let currentUser = null; // { username, passwordHash, lastSync }
+        let authMode = 'login'; // 'login' | 'register'
+        let cloudSyncTimer = null;
 
         // ==========================================
         // 2. 試算表 CSV 讀取與多標籤/多徽章解析引擎
@@ -1169,7 +1275,277 @@
         }
 
         // ==========================================
-        // 3. 分組統計與一字多徽章計算引擎
+        // 3. 使用者登入、註冊與雲端存檔同步引擎
+        // ==========================================
+        async function hashPassword(password) {
+            const salted = 'HanziSmelter_Salt_2026_' + password;
+            if (window.crypto && window.crypto.subtle) {
+                const msgBuffer = new TextEncoder().encode(salted);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+            let h = 0;
+            for (let i = 0; i < salted.length; i++) {
+                h = ((h << 5) - h) + salted.charCodeAt(i);
+                h |= 0;
+            }
+            return 'fallback_' + Math.abs(h).toString(16);
+        }
+
+        async function callGasApi(payload) {
+            if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL === 'YOUR_GAS_WEB_APP_URL') {
+                throw new Error('尚未設定 GAS_WEB_APP_URL，請先完成 Apps Script 部署並貼上網址');
+            }
+            const res = await fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                redirect: 'follow',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) {
+                throw new Error('網路連線異常，請稍後再試');
+            }
+            return await res.json();
+        }
+
+        function updateUserHeaderUI(syncing = false) {
+            const btn = document.getElementById('userAuthBtn');
+            if (!btn) return;
+            if (currentUser) {
+                btn.className = 'btn btn-user-logged';
+                btn.innerText = syncing ? `☁️ 同步中...` : `👤 ${currentUser.username}`;
+            } else {
+                btn.className = 'btn';
+                btn.innerText = '👤 登入 / 註冊';
+            }
+        }
+
+        function openAuthModal() {
+            renderAuthModal();
+            openModal('authModal');
+        }
+
+        function switchAuthMode(mode) {
+            authMode = mode;
+            renderAuthModal();
+        }
+
+        function renderAuthModal() {
+            const body = document.getElementById('authModalBody');
+
+            if (currentUser) {
+                body.innerHTML = `
+                    <div style="text-align:center; padding:10px 0 18px;">
+                        <div style="font-size:2.4rem; margin-bottom:6px;">🧙‍♂️</div>
+                        <div style="font-size:1.15rem; font-weight:bold; color:var(--accent-green);">
+                            ${currentUser.username}
+                        </div>
+                        <div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">
+                            已連線至 Google 試算表雲端存檔
+                        </div>
+                        ${currentUser.lastSync ? `<div style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">上次同步：${currentUser.lastSync}</div>` : ''}
+                    </div>
+                    <div id="authStatusMsg" class="auth-status"></div>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <button class="btn btn-primary" style="justify-content:center; padding:9px;" onclick="manualSyncNow()">🔄 立即手動同步雲端進度</button>
+                        <button class="btn" style="justify-content:center; padding:9px; color:#fca5a5;" onclick="logoutUser()">🚪 登出此帳號</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const isGasReady = GAS_WEB_APP_URL && GAS_WEB_APP_URL !== 'YOUR_GAS_WEB_APP_URL';
+            body.innerHTML = `
+                <div class="auth-tabs">
+                    <div class="auth-tab ${authMode === 'login' ? 'active' : ''}" onclick="switchAuthMode('login')">登入帳號</div>
+                    <div class="auth-tab ${authMode === 'register' ? 'active' : ''}" onclick="switchAuthMode('register')">註冊新帳號</div>
+                </div>
+
+                ${!isGasReady ? `<div class="auth-status error">⚠️ 尚未設定 Apps Script 網址（GAS_WEB_APP_URL），目前僅能使用本機存檔。</div>` : ''}
+                <div id="authStatusMsg" class="auth-status"></div>
+
+                <div class="auth-field">
+                    <label>使用者帳號（暱稱或 Email）</label>
+                    <input type="text" id="authUsername" placeholder="請輸入帳號..." autocomplete="username">
+                </div>
+                <div class="auth-field">
+                    <label>密碼</label>
+                    <input type="password" id="authPassword" placeholder="請輸入密碼..." autocomplete="current-password" onkeydown="if(event.key==='Enter') submitAuthForm()">
+                </div>
+
+                <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:14px; line-height:1.45;">
+                    ${authMode === 'login'
+                        ? '登入後會自動將本機進度與雲端存檔合併，換裝置也能接續遊玩。'
+                        : '註冊時會自動把你目前本機已煉出的漢字一併備份至雲端。'}
+                </p>
+
+                <button class="btn btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center; padding:10px; font-size:0.95rem;" onclick="submitAuthForm()">
+                    ${authMode === 'login' ? '🔓 登入並同步進度' : '✨ 建立帳號並備份存檔'}
+                </button>
+            `;
+        }
+
+        function setAuthStatus(type, msg) {
+            const el = document.getElementById('authStatusMsg');
+            if (!el) return;
+            el.className = `auth-status ${type}`;
+            el.innerText = msg;
+        }
+
+        async function submitAuthForm() {
+            const usernameInput = document.getElementById('authUsername');
+            const passwordInput = document.getElementById('authPassword');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            if (!usernameInput || !passwordInput) return;
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!username || !password) {
+                setAuthStatus('error', '請輸入帳號與密碼！');
+                return;
+            }
+            if (password.length < 4) {
+                setAuthStatus('error', '密碼長度請至少 4 個字元');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            setAuthStatus('info', authMode === 'login' ? '⏳ 正在驗證帳號並讀取雲端存檔...' : '⏳ 正在建立雲端帳號...');
+
+            try {
+                const passwordHash = await hashPassword(password);
+                const payload = {
+                    action: authMode,
+                    username,
+                    passwordHash,
+                    unlocked: JSON.stringify(Array.from(unlockedItems)),
+                    history: JSON.stringify(recipeHistory)
+                };
+
+                const result = await callGasApi(payload);
+                if (!result.success) {
+                    setAuthStatus('error', result.message || '驗證失敗');
+                    submitBtn.disabled = false;
+                    return;
+                }
+
+                // 登入成功：合併雲端與本機進度，確保兩邊戰果都不遺失
+                if (authMode === 'login') {
+                    if (Array.isArray(result.unlocked)) {
+                        result.unlocked.forEach(c => unlockedItems.add(c));
+                    }
+                    if (result.history && typeof result.history === 'object') {
+                        recipeHistory = Object.assign({}, result.history, recipeHistory);
+                    }
+                }
+
+                currentUser = {
+                    username,
+                    passwordHash,
+                    lastSync: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+                };
+                localStorage.setItem('hanzi_smelter_auth', JSON.stringify({ username, passwordHash }));
+
+                // 將合併後的最新進度寫回本機與雲端
+                localStorage.setItem('hanzi_smelter_unlocked', JSON.stringify(Array.from(unlockedItems)));
+                localStorage.setItem('hanzi_smelter_history', JSON.stringify(recipeHistory));
+                if (authMode === 'login') {
+                    await syncToCloud();
+                }
+
+                updateUserHeaderUI(false);
+                renderInventory();
+                updateProgress();
+                closeModal('authModal');
+                showToast(`👤 歡迎回來，${username}！雲端進度已同步`);
+            } catch (err) {
+                setAuthStatus('error', err.message);
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function syncToCloud() {
+            if (!currentUser) return;
+            updateUserHeaderUI(true);
+            try {
+                const res = await callGasApi({
+                    action: 'sync',
+                    username: currentUser.username,
+                    passwordHash: currentUser.passwordHash,
+                    unlocked: JSON.stringify(Array.from(unlockedItems)),
+                    history: JSON.stringify(recipeHistory)
+                });
+                if (res.success) {
+                    currentUser.lastSync = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+                }
+            } catch (err) {
+                console.error('雲端同步失敗:', err);
+            } finally {
+                updateUserHeaderUI(false);
+            }
+        }
+
+        function debouncedCloudSync() {
+            if (!currentUser) return;
+            if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
+            cloudSyncTimer = setTimeout(() => {
+                syncToCloud();
+            }, 1200);
+        }
+
+        async function manualSyncNow() {
+            if (!currentUser) return;
+            setAuthStatus('info', '⏳ 正在同步雲端進度...');
+            await syncToCloud();
+            renderAuthModal();
+            setAuthStatus('success', '✅ 雲端存檔已更新為最新進度！');
+        }
+
+        function logoutUser() {
+            currentUser = null;
+            localStorage.removeItem('hanzi_smelter_auth');
+            updateUserHeaderUI(false);
+            closeModal('authModal');
+            showToast('👋 已登出雲端帳號（本機進度仍保留）');
+        }
+
+        async function restoreUserSession() {
+            const savedAuth = localStorage.getItem('hanzi_smelter_auth');
+            if (!savedAuth || !GAS_WEB_APP_URL || GAS_WEB_APP_URL === 'YOUR_GAS_WEB_APP_URL') return;
+
+            try {
+                const { username, passwordHash } = JSON.parse(savedAuth);
+                if (!username || !passwordHash) return;
+
+                currentUser = { username, passwordHash, lastSync: '' };
+                updateUserHeaderUI(true);
+
+                const res = await callGasApi({ action: 'login', username, passwordHash });
+                if (res.success) {
+                    if (Array.isArray(res.unlocked)) {
+                        res.unlocked.forEach(c => unlockedItems.add(c));
+                    }
+                    if (res.history && typeof res.history === 'object') {
+                        recipeHistory = Object.assign({}, res.history, recipeHistory);
+                    }
+                    currentUser.lastSync = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+                    localStorage.setItem('hanzi_smelter_unlocked', JSON.stringify(Array.from(unlockedItems)));
+                    localStorage.setItem('hanzi_smelter_history', JSON.stringify(recipeHistory));
+                } else {
+                    currentUser = null;
+                    localStorage.removeItem('hanzi_smelter_auth');
+                }
+            } catch (err) {
+                console.error('自動恢復登入狀態失敗:', err);
+            } finally {
+                updateUserHeaderUI(false);
+            }
+        }
+
+        // ==========================================
+        // 4. 分組統計與一字多徽章計算引擎
         // ==========================================
         function getGroupedCollections() {
             const groups = {};
@@ -1205,11 +1581,12 @@
         }
 
         // ==========================================
-        // 4. 遊戲核心互動邏輯
+        // 5. 遊戲核心互動邏輯
         // ==========================================
         window.onload = async () => {
             await loadDatabaseFromSheets();
             loadProgress();
+            await restoreUserSession();
             renderInventory();
             updateProgress();
         };
@@ -1423,7 +1800,7 @@
                 </div>
 
                 <div style="text-align:center;">
-                    <button class="btn btn-primary" style="margin:0 auto; padding:8px 28px; font-size:0.95rem;" onclick="closeModal('charDetailModal')">✓ 好</button>
+                    <button class="btn btn-primary" style="margin:0 auto; padding:8px 28px; font-size:0.95rem;" onclick="closeModal('charDetailModal')">✓ 我看完了</button>
                 </div>
             `;
             openModal('charDetailModal');
@@ -1443,7 +1820,7 @@
         }
 
         // ==========================================
-        // 5. 渲染「已獲得徽章」陳列館 Modal（支援收闔/展開）
+        // 6. 渲染「已獲得徽章」陳列館 Modal（支援收闔/展開）
         // ==========================================
         let expandedBadges = new Set();
 
@@ -1479,7 +1856,6 @@
         function createBadgeCardHTML(group, isEarned) {
             const safeName = group.name.replace(/"/g, '&quot;');
 
-            // 已完成徽章：預設收闔成「圖示＋文字」，點擊後張開完整內容
             if (isEarned && !expandedBadges.has(group.name)) {
                 return `
                     <div class="badge-card earned-toggle collapsed" data-group="${safeName}" onclick="toggleBadgeExpand(this.dataset.group)" title="點擊展開徽章詳情">
@@ -1519,7 +1895,7 @@
         }
 
         // ==========================================
-        // 6. 渲染「主題分類圖鑑」Modal
+        // 7. 渲染「主題分類圖鑑」Modal
         // ==========================================
         function setPokedexFilter(filterType, el) {
             pokedexFilter = filterType;
@@ -1633,18 +2009,25 @@
             document.getElementById('confirmResetBtn').disabled = (val !== '重置');
         }
 
-        function executeResetProgress() {
+        async function executeResetProgress() {
             const val = document.getElementById('resetConfirmInput').value.trim();
             if (val !== '重置') return;
 
             localStorage.removeItem('hanzi_smelter_unlocked');
             localStorage.removeItem('hanzi_smelter_history');
+
+            if (currentUser) {
+                unlockedItems = new Set(INITIAL_UNLOCKED);
+                recipeHistory = {};
+                await syncToCloud();
+            }
             location.reload();
         }
 
         function saveProgress() {
             localStorage.setItem('hanzi_smelter_unlocked', JSON.stringify(Array.from(unlockedItems)));
             localStorage.setItem('hanzi_smelter_history', JSON.stringify(recipeHistory));
+            debouncedCloudSync();
         }
 
         function loadProgress() {
