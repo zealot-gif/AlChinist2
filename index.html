@@ -787,6 +787,57 @@
                 padding: 24px 10px;
             }
         }
+        /* 已獲得徽章：收闔（圖示＋文字膠囊）與展開切換樣式 */
+        .earned-badges-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .badge-card.earned-toggle {
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .badge-card.earned-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(251, 191, 36, 0.32);
+        }
+
+        /* 收闔狀態：只顯示圖示與文字 */
+        .badge-card.collapsed {
+            flex-direction: row;
+            padding: 8px 16px;
+            border-radius: 999px;
+            gap: 8px;
+            text-align: left;
+        }
+
+        .badge-compact-icon {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .badge-compact-name {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+
+        .badge-caret {
+            font-size: 0.75rem;
+            color: #fcd34d;
+            opacity: 0.85;
+            margin-left: 2px;
+        }
+
+        /* 展開狀態：顯示完整徽章與字庫 */
+        .badge-card.expanded {
+            flex: 1 1 260px;
+            max-width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -862,7 +913,7 @@
             </div>
             <div class="modal-body">
                 <h4 class="badge-section-title">✨ 已獲得徽章 (<span id="earnedBadgeNum">0</span>)</h4>
-                <div class="badges-grid" id="earnedBadgesGrid"></div>
+                <div class="earned-badges-wrap" id="earnedBadgesGrid"></div>
 
                 <h4 class="badge-section-title" style="color:var(--text-muted);">🔒 尚未集齊的徽章 (<span id="lockedBadgeNum">0</span>)</h4>
                 <div class="badges-grid" id="lockedBadgesGrid"></div>
@@ -1392,8 +1443,19 @@
         }
 
         // ==========================================
-        // 5. 渲染「已獲得徽章」陳列館 Modal
+        // 5. 渲染「已獲得徽章」陳列館 Modal（支援收闔/展開）
         // ==========================================
+        let expandedBadges = new Set();
+
+        function toggleBadgeExpand(groupName) {
+            if (expandedBadges.has(groupName)) {
+                expandedBadges.delete(groupName);
+            } else {
+                expandedBadges.add(groupName);
+            }
+            renderBadgesModal();
+        }
+
         function renderBadgesModal() {
             const groups = Object.values(getGroupedCollections()).filter(g => g.isBadgeGroup);
             const earned = groups.filter(g => g.completed);
@@ -1406,7 +1468,7 @@
             const lockedGrid = document.getElementById('lockedBadgesGrid');
 
             if (earned.length === 0) {
-                earnedGrid.innerHTML = `<div style="grid-column:1/-1; color:var(--text-muted); font-size:0.88rem; padding:12px; background:#0f172a; border-radius:8px; text-align:center;">尚未獲得任何徽章，試著集齊任一主題的所有漢字吧！</div>`;
+                earnedGrid.innerHTML = `<div style="width:100%; color:var(--text-muted); font-size:0.88rem; padding:12px; background:#0f172a; border-radius:8px; text-align:center;">尚未獲得任何徽章，試著集齊任一主題的所有漢字吧！</div>`;
             } else {
                 earnedGrid.innerHTML = earned.map(g => createBadgeCardHTML(g, true)).join('');
             }
@@ -1415,17 +1477,41 @@
         }
 
         function createBadgeCardHTML(group, isEarned) {
+            const safeName = group.name.replace(/"/g, '&quot;');
+
+            // 已完成徽章：預設收闔成「圖示＋文字」，點擊後張開完整內容
+            if (isEarned && !expandedBadges.has(group.name)) {
+                return `
+                    <div class="badge-card earned-toggle collapsed" data-group="${safeName}" onclick="toggleBadgeExpand(this.dataset.group)" title="點擊展開徽章詳情">
+                        <span class="badge-compact-icon">${group.icon}</span>
+                        <span class="badge-compact-name">${group.name}</span>
+                        <span class="badge-caret">▾</span>
+                    </div>
+                `;
+            }
+
             const pills = group.chars.map(c => {
                 const has = unlockedItems.has(c);
                 return `<span class="mini-char ${has ? '' : 'missing'}">${has ? c : '？'}</span>`;
             }).join('');
 
+            if (isEarned) {
+                return `
+                    <div class="badge-card earned-toggle expanded" data-group="${safeName}" onclick="toggleBadgeExpand(this.dataset.group)" title="點擊收闔徽章">
+                        <div class="badge-emblem">${group.icon}</div>
+                        <div class="badge-name">${group.name} <span class="badge-caret">▴</span></div>
+                        <div style="font-size:0.78rem; color:#fcd34d;">✨ 已集齊全套漢字（點擊收闔）</div>
+                        <div class="badge-chars-pill">${pills}</div>
+                    </div>
+                `;
+            }
+
             return `
-                <div class="badge-card ${isEarned ? '' : 'locked'}">
+                <div class="badge-card locked">
                     <div class="badge-emblem">${group.icon}</div>
                     <div class="badge-name">${group.name}</div>
-                    <div style="font-size:0.78rem; color:${isEarned ? '#fcd34d' : 'var(--text-muted)'};">
-                        ${isEarned ? '✨ 已獲得徽章' : `收集進度：${group.unlockedCount} / ${group.totalCount} 字`}
+                    <div style="font-size:0.78rem; color:var(--text-muted);">
+                        收集進度：${group.unlockedCount} / ${group.totalCount} 字
                     </div>
                     <div class="badge-chars-pill">${pills}</div>
                 </div>
