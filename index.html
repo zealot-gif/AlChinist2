@@ -1071,6 +1071,89 @@
                 gap: 6px;
             }
         }
+        /* 商店按鈕與金幣膠囊 */
+        button.btn-shop {
+            background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+            border-color: var(--accent-blue);
+            color: #e0f2fe;
+            font-weight: bold;
+        }
+        button.btn-shop:hover {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            border-color: var(--accent-gold);
+        }
+
+        .coin-pill {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(251, 191, 36, 0.55);
+            color: var(--accent-gold);
+            padding: 1px 7px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            margin-left: 2px;
+        }
+
+        /* 商店彈窗內部樣式 */
+        .shop-wallet-banner {
+            background: linear-gradient(135deg, #291d0e, #18130c);
+            border: 1.5px solid var(--accent-gold);
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .shop-balance {
+            font-size: 1.35rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+
+        .shop-buy-box {
+            background: #131c2e;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+
+        .shop-select {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 9px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin: 8px 0 12px;
+            outline: none;
+        }
+
+        .hint-card {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-blue);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+        }
+
+        .hint-card.solved {
+            border-left-color: var(--accent-green);
+            opacity: 0.82;
+        }
+
+        .hint-formula {
+            font-family: "KaiTi", "BiauKai", "DFKai-SB", serif;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+            margin: 6px 0;
+        }
     </style>
 </head>
 <body>
@@ -1089,6 +1172,7 @@
         <div class="btn-group">
             <button class="btn btn-badge" onclick="openModal('badgesModal')">🏆 已獲得徽章 (<span id="badgeCountText">0/0</span>)</button>
             <button class="btn btn-primary" onclick="openModal('pokedexModal')">📜 分類圖鑑</button>
+            <button class="btn btn-shop" onclick="openModal('shopModal')">🛒 商店 <span class="coin-pill">🪙 <span id="headerCoinCount">0</span></span></button>
             <button class="btn" onclick="openModal('noticeModal')">📢 公告</button>
             <button class="btn" id="userAuthBtn" onclick="openAuthModal()">👤 登入 / 註冊</button>
         </div>
@@ -1232,6 +1316,17 @@
         </div>
     </div>
 
+    <!-- 🛒 煉字提示商店 Modal -->
+    <div class="modal-overlay" id="shopModal" onclick="if(event.target === this) closeModal('shopModal')">
+        <div class="modal-content" style="max-width: 540px;">
+            <div class="modal-header">
+                <h3>🛒 煉字提示商店</h3>
+                <button class="btn" onclick="closeModal('shopModal')">✕</button>
+            </div>
+            <div class="modal-body" id="shopModalBody"></div>
+        </div>
+    </div>
+    
     <script>
         // ==========================================
         // 1. Google 試算表與 Apps Script 設定區
@@ -1278,6 +1373,13 @@
         let authMode = 'login';
         let cloudSyncTimer = null;
 
+        // 金幣與商店狀態
+        const COINS_PER_BADGE = 3;
+        const HINT_COST = 5;
+        let userCoins = 0;
+        let rewardedBadges = new Set();
+        let purchasedHints = []; // [{ target, revealed, totalSlots, theme, pinyin, structure, clue }]
+        
         // ==========================================
         // 2. 試算表 CSV 讀取與多標籤/多徽章解析引擎
         // ==========================================
@@ -1596,7 +1698,7 @@
                     username,
                     passwordHash,
                     unlocked: JSON.stringify(Array.from(unlockedItems)),
-                    history: JSON.stringify(recipeHistory)
+                    history: JSON.stringify(buildSyncHistoryPayload())
                 };
 
                 const result = await callGasApi(payload);
@@ -1611,6 +1713,7 @@
                         result.unlocked.forEach(c => unlockedItems.add(c));
                     }
                     if (result.history && typeof result.history === 'object') {
+                        applyWalletFromHistory(result.history);
                         recipeHistory = Object.assign({}, result.history, recipeHistory);
                     }
                 }
@@ -1623,7 +1726,7 @@
                 localStorage.setItem('hanzi_smelter_auth', JSON.stringify({ username, passwordHash }));
 
                 localStorage.setItem('hanzi_smelter_unlocked', JSON.stringify(Array.from(unlockedItems)));
-                localStorage.setItem('hanzi_smelter_history', JSON.stringify(recipeHistory));
+                localStorage.setItem('hanzi_smelter_history', JSON.stringify(buildSyncHistoryPayload()));
                 if (authMode === 'login') {
                     await syncToCloud();
                 }
@@ -1647,7 +1750,7 @@
                     username: currentUser.username,
                     passwordHash: currentUser.passwordHash,
                     unlocked: JSON.stringify(Array.from(unlockedItems)),
-                    history: JSON.stringify(recipeHistory)
+                    history: JSON.stringify(buildSyncHistoryPayload())
                 });
                 if (res.success) {
                     currentUser.lastSync = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
@@ -1698,11 +1801,12 @@
                         res.unlocked.forEach(c => unlockedItems.add(c));
                     }
                     if (res.history && typeof res.history === 'object') {
+                        applyWalletFromHistory(res.history);
                         recipeHistory = Object.assign({}, res.history, recipeHistory);
                     }
                     currentUser.lastSync = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
                     localStorage.setItem('hanzi_smelter_unlocked', JSON.stringify(Array.from(unlockedItems)));
-                    localStorage.setItem('hanzi_smelter_history', JSON.stringify(recipeHistory));
+                    localStorage.setItem('hanzi_smelter_history', JSON.stringify(buildSyncHistoryPayload()));
                 } else {
                     currentUser = null;
                     localStorage.removeItem('hanzi_smelter_auth');
@@ -1765,13 +1869,14 @@
             await loadDatabaseFromSheets();
             loadProgress();
             await restoreUserSession();
+            checkAndAwardBadgeCoins(false);
             renderInventory();
             updateProgress();
             if (NOTICES.length > 0) {
                 openModal('noticeModal');
             }
         };
-
+        
         function countInSlots(id) {
             return slots.filter(s => s === id).length;
         }
@@ -1874,11 +1979,13 @@
                         .map(gName => groups[gName])
                         .filter(g => g && g.isBadgeGroup);
 
-                    const newlyCompleted = badgeTargets.filter(g => g.completed);
+                   const awardedBadges = checkAndAwardBadgeCoins(true);
 
                     if (newlyCompleted.length > 0) {
+                        const totalEarnedCoins = awardedBadges.length * COINS_PER_BADGE;
+                        const coinText = totalEarnedCoins > 0 ? `（+${totalEarnedCoins} 🪙）` : '';
                         const badgeLabels = newlyCompleted.map(g => `${g.icon}【${g.name}】`).join('、');
-                        showToast(`🎉 煉出【${resultId}】並獲得徽章：${badgeLabels}！`, true, detailData);
+                        showToast(`🎉 煉出【${resultId}】並獲得徽章：${badgeLabels}${coinText}！`, true, detailData);
                     } else if (badgeTargets.length > 0) {
                         const progressHint = badgeTargets
                             .map(g => `${g.name} ${g.unlockedCount}/${g.totalCount}`)
@@ -1986,7 +2093,183 @@
             `;
             openModal('charDetailModal');
         }
+// ==========================================
+        // 金幣結算與商店提示系統
+        // ==========================================
+        function checkAndAwardBadgeCoins(silent = false) {
+            const badgeGroups = Object.values(getGroupedCollections()).filter(g => g.isBadgeGroup);
+            const newlyRewarded = [];
 
+            badgeGroups.forEach(g => {
+                if (g.completed && !rewardedBadges.has(g.name)) {
+                    rewardedBadges.add(g.name);
+                    userCoins += COINS_PER_BADGE;
+                    newlyRewarded.push(g);
+                }
+            });
+
+            updateCoinUI();
+            if (newlyRewarded.length > 0 && !silent) {
+                saveProgress();
+            }
+            return newlyRewarded;
+        }
+
+        function updateCoinUI() {
+            const el = document.getElementById('headerCoinCount');
+            if (el) el.innerText = userCoins;
+        }
+
+        function getHintCandidates(themeFilter = 'smart') {
+            const hintedTargets = new Set(purchasedHints.map(h => h.target));
+            const recipeByResult = {};
+            Object.entries(RECIPES).forEach(([ingKey, res]) => {
+                if (!recipeByResult[res]) recipeByResult[res] = ingKey.split('+');
+            });
+
+            const candidates = [];
+            Object.entries(ITEMS).forEach(([char, info]) => {
+                if (unlockedItems.has(char) || hintedTargets.has(char)) return;
+                const ingredients = recipeByResult[char];
+                if (!ingredients || ingredients.length < 2) return;
+
+                const groups = (info.groups || []).filter(g => g !== '基礎字根');
+                if (themeFilter !== 'smart' && !groups.includes(themeFilter)) return;
+
+                const allIngredientsReady = ingredients.every(ing => unlockedItems.has(ing));
+                candidates.push({
+                    char,
+                    info,
+                    ingredients,
+                    allIngredientsReady,
+                    theme: groups[0] || '綜合字集'
+                });
+            });
+
+            // 智慧優先：優先挑選「目前原料已全數解鎖、可直接合成」的字
+            candidates.sort((a, b) => Number(b.allIngredientsReady) - Number(a.allIngredientsReady));
+            return candidates;
+        }
+
+        function buyHint() {
+            if (userCoins < HINT_COST) {
+                showToast(`🪙 金幣不足！需要 ${HINT_COST} 金幣（集齊 1 枚徽章可獲得 ${COINS_PER_BADGE} 金幣）`);
+                return;
+            }
+
+            const selectEl = document.getElementById('hintThemeSelect');
+            const themeFilter = selectEl ? selectEl.value : 'smart';
+            const candidates = getHintCandidates(themeFilter);
+
+            if (candidates.length === 0) {
+                showToast('✨ 此範圍內已沒有可購買的新提示了！');
+                return;
+            }
+
+            // 從優先候選池中隨機抽取一字
+            const topReady = candidates.filter(c => c.allIngredientsReady);
+            const pool = topReady.length > 0 ? topReady : candidates;
+            const picked = pool[Math.floor(Math.random() * pool.length)];
+
+            const revealCount = picked.ingredients.length >= 3 ? 2 : 1;
+            const revealed = picked.ingredients.slice(0, revealCount);
+            const maskedChar = new RegExp(picked.char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+            const clue = (picked.info.desc || '嘗試將提示中的原料投入熔爐吧！').replace(maskedChar, '□');
+
+            userCoins -= HINT_COST;
+            purchasedHints.unshift({
+                target: picked.char,
+                revealed,
+                totalSlots: picked.ingredients.length,
+                theme: picked.theme,
+                pinyin: picked.info.pinyin,
+                structure: picked.info.structure,
+                clue
+            });
+
+            saveProgress();
+            updateCoinUI();
+            renderShopModal();
+            showToast(`💡 已花費 ${HINT_COST} 金幣購買新提示！`);
+        }
+
+        function applyHintIngredients(index) {
+            const hint = purchasedHints[index];
+            if (!hint) return;
+            clearAllSlots();
+            hint.revealed.forEach(ing => {
+                if (unlockedItems.has(ing)) {
+                    selectCard(ing);
+                }
+            });
+            closeModal('shopModal');
+            showToast(`📥 已將已知原料【${hint.revealed.join(' + ')}】放入熔爐！`);
+        }
+
+        function renderShopModal() {
+            const body = document.getElementById('shopModalBody');
+            if (!body) return;
+
+            const badgeGroups = sortMiscToBottom(
+                Object.values(getGroupedCollections()).filter(g => g.isBadgeGroup && !g.completed)
+            );
+            const themeOptions = badgeGroups.map(g =>
+                `<option value="${escapeHTML(g.name)}">${escapeHTML(g.icon)} ${escapeHTML(g.name)}（${g.unlockedCount}/${g.totalCount}）</option>`
+            ).join('');
+
+            const canAfford = userCoins >= HINT_COST;
+
+            const hintsHTML = purchasedHints.length === 0
+                ? `<div style="text-align:center; color:var(--text-muted); font-size:0.86rem; padding:16px; background:#0f172a; border-radius:8px;">尚未購買任何提示，卡關時可花費 ${HINT_COST} 金幣解鎖線索！</div>`
+                : purchasedHints.map((h, idx) => {
+                    const isSolved = unlockedItems.has(h.target);
+                    const unknownCount = Math.max(1, h.totalSlots - h.revealed.length);
+                    const formulaText = [...h.revealed, ...Array(unknownCount).fill('？')].join(' + ');
+                    return `
+                        <div class="hint-card ${isSolved ? 'solved' : ''}">
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                                <span style="font-size:0.8rem; color:var(--accent-blue);">🏷️ ${escapeHTML(h.theme)} · ${escapeHTML(h.structure)} (${escapeHTML(h.pinyin)})</span>
+                                <span style="font-size:0.78rem; color:${isSolved ? 'var(--accent-green)' : '#fcd34d'}; font-weight:bold;">
+                                    ${isSolved ? `✅ 已煉出【${escapeHTML(h.target)}】` : `🔍 尚未煉出（需 ${h.totalSlots} 槽）`}
+                                </span>
+                            </div>
+                            <div class="hint-formula">${escapeHTML(formulaText)} = ${isSolved ? escapeHTML(h.target) : '□'}</div>
+                            <div style="font-size:0.84rem; color:var(--text-muted); line-height:1.5;">${escapeHTML(h.clue)}</div>
+                            ${!isSolved ? `<button class="btn" style="margin-top:8px; font-size:0.78rem; padding:4px 10px;" onclick="applyHintIngredients(${idx})">📥 填入已知原料到熔爐</button>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+            body.innerHTML = `
+                <div class="shop-wallet-banner">
+                    <div>
+                        <div style="font-size:0.82rem; color:var(--text-muted);">目前持有金幣</div>
+                        <div class="shop-balance">🪙 ${userCoins} 枚</div>
+                    </div>
+                    <div style="font-size:0.8rem; color:#fde68a; text-align:right; line-height:1.5;">
+                        🏆 集齊 1 枚徽章 ➔ <strong>+${COINS_PER_BADGE} 🪙</strong><br>
+                        💡 購買 1 則提示 ➔ <strong>-${HINT_COST} 🪙</strong>
+                    </div>
+                </div>
+
+                <div class="shop-buy-box">
+                    <div style="font-weight:bold; color:var(--text-main); font-size:0.95rem;">💡 購買煉字配方提示（${HINT_COST} 金幣 / 次）</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">揭示目標字的結構、字義線索，以及 1～2 個關鍵原料字。</div>
+                    <select class="shop-select" id="hintThemeSelect">
+                        <option value="smart">🎯 智慧推薦（優先挑選原料已齊全的新字）</option>
+                        ${themeOptions}
+                    </select>
+                    <button class="btn btn-primary" style="width:100%; justify-content:center; padding:10px; font-size:0.95rem; ${canAfford ? '' : 'opacity:0.55;'}" onclick="buyHint()">
+                        ${canAfford ? `🪙 花費 ${HINT_COST} 金幣購買提示` : `🔒 金幣不足（尚缺 ${HINT_COST - userCoins} 金幣）`}
+                    </button>
+                </div>
+
+                <div style="font-weight:bold; color:var(--accent-gold); font-size:0.95rem; margin-bottom:10px;">
+                    📜 已購提示錦囊 (${purchasedHints.length})
+                </div>
+                ${hintsHTML}
+            `;
+        }
         function updateProgress() {
             const total = Object.keys(ITEMS).length;
             const current = Array.from(unlockedItems).filter(id => ITEMS[id]).length;
@@ -2226,6 +2509,7 @@
             }
             if (id === 'badgesModal') renderBadgesModal();
             if (id === 'noticeModal') renderNoticesModal();
+            if (id === 'shopModal') renderShopModal();
             document.getElementById(id).style.display = 'flex';
         }
 
@@ -2256,37 +2540,35 @@
             document.getElementById('confirmResetBtn').disabled = (val !== '重置');
         }
 
-        async function executeResetProgress() {
-            const val = document.getElementById('resetConfirmInput').value.trim();
-            if (val !== '重置') return;
-
-            localStorage.removeItem('hanzi_smelter_unlocked');
-            localStorage.removeItem('hanzi_smelter_history');
-
-            if (currentUser) {
-                unlockedItems = new Set(INITIAL_UNLOCKED);
-                recipeHistory = {};
-                await syncToCloud();
+        function applyWalletFromHistory(historyObj) {
+            if (!historyObj || typeof historyObj !== 'object' || !historyObj.__wallet) return;
+            const w = historyObj.__wallet;
+            if (typeof w.coins === 'number') {
+                userCoins = Math.max(userCoins, w.coins);
             }
-            location.reload();
+            if (Array.isArray(w.rewardedBadges)) {
+                w.rewardedBadges.forEach(b => rewardedBadges.add(b));
+            }
+            if (Array.isArray(w.purchasedHints)) {
+                const existingTargets = new Set(purchasedHints.map(h => h.target));
+                w.purchasedHints.forEach(h => {
+                    if (h && h.target && !existingTargets.has(h.target)) {
+                        purchasedHints.push(h);
+                        existingTargets.add(h.target);
+                    }
+                });
+            }
+            delete historyObj.__wallet;
         }
 
-        function saveProgress() {
-            localStorage.setItem('hanzi_smelter_unlocked', JSON.stringify(Array.from(unlockedItems)));
-            localStorage.setItem('hanzi_smelter_history', JSON.stringify(recipeHistory));
-            debouncedCloudSync();
-        }
-
-        function loadProgress() {
-            const savedUnlocked = localStorage.getItem('hanzi_smelter_unlocked');
-            const savedHistory = localStorage.getItem('hanzi_smelter_history');
-
-            const baseSet = new Set(INITIAL_UNLOCKED);
-            if (savedUnlocked) {
-                JSON.parse(savedUnlocked).forEach(id => baseSet.add(id));
-            }
-            unlockedItems = baseSet;
-            if (savedHistory) recipeHistory = JSON.parse(savedHistory);
+        function buildSyncHistoryPayload() {
+            return Object.assign({}, recipeHistory, {
+                __wallet: {
+                    coins: userCoins,
+                    rewardedBadges: Array.from(rewardedBadges),
+                    purchasedHints: purchasedHints
+                }
+            });
         }
     </script>
 </body>
