@@ -1154,6 +1154,98 @@
                 gap: 6px;
             }
         }
+        /* 聚光燈互動式新手教學 */
+        .tutorial-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: none;
+        }
+
+        .tutorial-spotlight {
+            position: fixed;
+            border: 2px solid var(--accent-gold);
+            border-radius: 12px;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.74), 0 0 22px rgba(251, 191, 36, 0.55);
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
+            z-index: 201;
+        }
+
+        .tutorial-card {
+            position: fixed;
+            width: min(370px, calc(100vw - 24px));
+            background: var(--panel-bg);
+            border: 1.5px solid var(--accent-gold);
+            border-radius: 14px;
+            padding: 16px 18px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+            z-index: 202;
+            transition: top 0.25s ease, left 0.25s ease;
+        }
+
+        .tutorial-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .tutorial-step-badge {
+            font-size: 0.76rem;
+            font-weight: bold;
+            color: #000;
+            background: var(--accent-gold);
+            padding: 2px 10px;
+            border-radius: 999px;
+        }
+
+        .tutorial-skip-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .tutorial-skip-btn:hover {
+            color: var(--text-main);
+            text-decoration: underline;
+        }
+
+        .tutorial-title {
+            font-size: 1.08rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+            margin-bottom: 6px;
+        }
+
+        .tutorial-desc {
+            font-size: 0.88rem;
+            color: var(--text-main);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .tutorial-demo-box {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px dashed rgba(251, 191, 36, 0.45);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .tutorial-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
     </style>
 </head>
 <body>
@@ -1174,6 +1266,7 @@
             <button class="btn btn-primary" onclick="openModal('pokedexModal')">📜 分類圖鑑</button>
             <button class="btn btn-shop" onclick="openModal('shopModal')">🛒 商店 <span class="coin-pill">🪙 <span id="headerCoinCount">0</span></span></button>
             <button class="btn" onclick="openModal('noticeModal')">📢 公告</button>
+            <button class="btn" onclick="startTutorial()">❓ 教學</button>
             <button class="btn" id="userAuthBtn" onclick="openAuthModal()">👤 登入 / 註冊</button>
         </div>
     </header>
@@ -1327,6 +1420,24 @@
         </div>
     </div>
 
+<!-- 🎓 新手教學聚光燈引導 -->
+    <div class="tutorial-overlay" id="tutorialOverlay">
+        <div class="tutorial-spotlight" id="tutorialSpotlight"></div>
+        <div class="tutorial-card" id="tutorialCard">
+            <div class="tutorial-card-top">
+                <span class="tutorial-step-badge" id="tutorialStepBadge">步驟 1 / 4</span>
+                <button class="tutorial-skip-btn" onclick="finishTutorial(true)">跳過教學 ✕</button>
+            </div>
+            <div class="tutorial-title" id="tutorialTitle"></div>
+            <div class="tutorial-desc" id="tutorialDesc"></div>
+            <div id="tutorialExtraAction"></div>
+            <div class="tutorial-nav">
+                <button class="btn" id="tutorialPrevBtn" onclick="prevTutorialStep()">← 上一步</button>
+                <button class="btn btn-primary" id="tutorialNextBtn" style="margin-left:auto; padding:6px 16px;" onclick="nextTutorialStep()">下一步 →</button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // ==========================================
         // 1. Google 試算表與 Apps Script 設定區
@@ -2075,6 +2186,195 @@
             `;
         }
 
+// ==========================================
+        // 新手教學聚光燈引導系統
+        // ==========================================
+        const TUTORIAL_STORAGE_KEY = 'hanzi_smelter_tutorial_done';
+        let tutorialStepIndex = 0;
+        let tutorialDemoRecipe = null;
+
+        function findDemoRecipeForTutorial() {
+            const entries = Object.entries(RECIPES);
+            // 優先找「尚未煉出、且原料已齊全」的 2 字配方；若全煉完了就找任一可用配方
+            let fallback = null;
+            for (const [ingKey, resultChar] of entries) {
+                if (!ITEMS[resultChar]) continue;
+                const parts = ingKey.split('+');
+                if (parts.length === 2 && parts.every(p => unlockedItems.has(p))) {
+                    if (!unlockedItems.has(resultChar)) {
+                        return { ingredients: parts, result: resultChar };
+                    }
+                    if (!fallback) {
+                        fallback = { ingredients: parts, result: resultChar };
+                    }
+                }
+            }
+            return fallback;
+        }
+
+        function getTutorialSteps() {
+            const demoText = tutorialDemoRecipe
+                ? `試試把 <strong>「${tutorialDemoRecipe.ingredients[0]}」+「${tutorialDemoRecipe.ingredients[1]}」</strong> 放進爐中！`
+                : '點擊字庫中的任意漢字或部首即可放入爐膛。';
+
+            return [
+                {
+                    selector: '.sidebar',
+                    title: '① 挑選漢字原料',
+                    desc: `歡迎來到<strong>文字大熔爐</strong>！這裡是你的漢字原料庫，可依分類篩選或搜尋注音。${demoText}`,
+                    extraHTML: tutorialDemoRecipe
+                        ? `<div class="tutorial-demo-box">
+                               <span style="font-size:0.8rem; color:#fde68a;">懶得找字？一鍵示範放入：</span>
+                               <button class="btn btn-primary" style="font-size:0.78rem; padding:4px 10px;" onclick="demoFillFurnace()">✨ 放入 ${tutorialDemoRecipe.ingredients.join(' + ')}</button>
+                           </div>`
+                        : ''
+                },
+                {
+                    selector: '.workspace',
+                    title: '② 投入熔煉造字',
+                    desc: '熔爐共有 <strong>3 個爐位</strong>（第 3 格為選填，可進行三字融合）。放滿至少 2 個字後按下<strong>「投入熔煉」</strong>即可造字；點擊爐位上的字可單獨退回。',
+                    extraHTML: tutorialDemoRecipe
+                        ? `<div class="tutorial-demo-box">
+                               <span style="font-size:0.8rem; color:#fde68a;">體驗造字合成：</span>
+                               <button class="btn btn-primary" style="font-size:0.78rem; padding:4px 10px;" onclick="demoRunSynthesis()">🔥 立即熔煉看看</button>
+                           </div>`
+                        : ''
+                },
+                {
+                    selector: '.btn-badge',
+                    title: '③ 集齊主題解鎖徽章與金幣',
+                    desc: '煉出新字時，點擊頂部金色提示框可查看<strong>造字結構與字義</strong>。集齊同一主題的所有漢字，就能解鎖<strong>【成就徽章】</strong>並獲得 <strong>3 枚金幣</strong>！',
+                    extraHTML: ''
+                },
+                {
+                    selector: '.btn-shop',
+                    title: '④ 分類圖鑑與配方提示商店',
+                    desc: '卡關時可點<strong>「📜 分類圖鑑」</strong>查看各主題進度，或進<strong>「🛒 商店」</strong>花費 <strong>5 金幣</strong>購買提示（會優先推薦你目前原料已齊全的新字喔！）。',
+                    extraHTML: ''
+                }
+            ];
+        }
+
+        function startTutorial() {
+            tutorialDemoRecipe = findDemoRecipeForTutorial();
+            tutorialStepIndex = 0;
+            const overlay = document.getElementById('tutorialOverlay');
+            if (!overlay) return;
+            overlay.style.display = 'block';
+            renderTutorialStep();
+        }
+
+        function renderTutorialStep() {
+            const steps = getTutorialSteps();
+            const step = steps[tutorialStepIndex];
+            if (!step) return;
+
+            document.getElementById('tutorialStepBadge').innerText = `步驟 ${tutorialStepIndex + 1} / ${steps.length}`;
+            document.getElementById('tutorialTitle').innerHTML = step.title;
+            document.getElementById('tutorialDesc').innerHTML = step.desc;
+            document.getElementById('tutorialExtraAction').innerHTML = step.extraHTML || '';
+
+            const prevBtn = document.getElementById('tutorialPrevBtn');
+            const nextBtn = document.getElementById('tutorialNextBtn');
+            prevBtn.style.visibility = tutorialStepIndex === 0 ? 'hidden' : 'visible';
+            nextBtn.innerText = tutorialStepIndex === steps.length - 1 ? '🎉 開始煉字！' : '下一步 →';
+
+            positionTutorialSpotlight(step.selector);
+        }
+
+        function positionTutorialSpotlight(selector) {
+            const target = document.querySelector(selector);
+            const spotlight = document.getElementById('tutorialSpotlight');
+            const card = document.getElementById('tutorialCard');
+            if (!target || !spotlight || !card) return;
+
+            const rect = target.getBoundingClientRect();
+            const pad = 6;
+            const boxTop = Math.max(4, rect.top - pad);
+            const boxLeft = Math.max(4, rect.left - pad);
+            const boxWidth = Math.min(window.innerWidth - boxLeft - 4, rect.width + pad * 2);
+            const boxHeight = Math.min(window.innerHeight - boxTop - 4, rect.height + pad * 2);
+
+            spotlight.style.top = `${boxTop}px`;
+            spotlight.style.left = `${boxLeft}px`;
+            spotlight.style.width = `${boxWidth}px`;
+            spotlight.style.height = `${boxHeight}px`;
+
+            // 計算引導卡片最佳位置（避免超出螢幕或遮住目標）
+            const cardRect = card.getBoundingClientRect();
+            const cardW = cardRect.width || Math.min(370, window.innerWidth - 24);
+            const cardH = cardRect.height || 210;
+
+            let cardLeft = rect.left + (rect.width - cardW) / 2;
+            cardLeft = Math.max(12, Math.min(window.innerWidth - cardW - 12, cardLeft));
+
+            let cardTop;
+            if (window.innerHeight - rect.bottom >= cardH + 20) {
+                cardTop = rect.bottom + 14;
+            } else if (rect.top >= cardH + 20) {
+                cardTop = rect.top - cardH - 14;
+            } else {
+                cardTop = Math.max(12, (window.innerHeight - cardH) / 2);
+            }
+
+            card.style.left = `${cardLeft}px`;
+            card.style.top = `${cardTop}px`;
+        }
+
+        function demoFillFurnace() {
+            if (!tutorialDemoRecipe) return;
+            clearAllSlots();
+            tutorialDemoRecipe.ingredients.forEach(ch => selectCard(ch));
+            nextTutorialStep();
+        }
+
+        function demoRunSynthesis() {
+            if (!tutorialDemoRecipe) return;
+            const currentActive = slots.filter(Boolean);
+            if (currentActive.length < 2) {
+                clearAllSlots();
+                tutorialDemoRecipe.ingredients.forEach(ch => selectCard(ch));
+            }
+            doSynthesis();
+            nextTutorialStep();
+        }
+
+        function nextTutorialStep() {
+            const steps = getTutorialSteps();
+            if (tutorialStepIndex < steps.length - 1) {
+                tutorialStepIndex++;
+                renderTutorialStep();
+            } else {
+                finishTutorial(false);
+            }
+        }
+
+        function prevTutorialStep() {
+            if (tutorialStepIndex > 0) {
+                tutorialStepIndex--;
+                renderTutorialStep();
+            }
+        }
+
+        function finishTutorial(skipped) {
+            localStorage.setItem(TUTORIAL_STORAGE_KEY, '1');
+            const overlay = document.getElementById('tutorialOverlay');
+            if (overlay) overlay.style.display = 'none';
+            if (!skipped) {
+                showToast('🎓 新手教學完成！祝你在文字大熔爐煉字愉快！');
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            const overlay = document.getElementById('tutorialOverlay');
+            if (overlay && overlay.style.display === 'block') {
+                const steps = getTutorialSteps();
+                if (steps[tutorialStepIndex]) {
+                    positionTutorialSpotlight(steps[tutorialStepIndex].selector);
+                }
+            }
+        });
+        
         // ==========================================
         // 6. 遊戲核心互動邏輯
         // ==========================================
@@ -2087,6 +2387,8 @@
             updateProgress();
             if (NOTICES.length > 0) {
                 openModal('noticeModal');
+            } else if (!localStorage.getItem(TUTORIAL_STORAGE_KEY)) {
+                startTutorial();
             }
         };
 
@@ -2557,6 +2859,9 @@
             if (modal) modal.style.display = 'none';
             if (id === 'pokedexModal') {
                 toggleResetPanel(false);
+            }
+            if (id === 'noticeModal' && !localStorage.getItem(TUTORIAL_STORAGE_KEY)) {
+                setTimeout(() => startTutorial(), 250);
             }
         }
 
