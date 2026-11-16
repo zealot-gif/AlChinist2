@@ -601,8 +601,8 @@
             background: #131c2e;
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 18px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
         }
 
         .group-section.completed {
@@ -614,11 +614,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .group-section.expanded .group-header {
             margin-bottom: 12px;
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
-            flex-wrap: wrap;
-            gap: 8px;
+        }
+
+        .group-header:hover .group-title {
+            color: var(--accent-gold);
         }
 
         .group-title {
@@ -1986,10 +1994,18 @@
             renderBadgesModal();
         }
 
+        function sortMiscToBottom(list) {
+            return [...list].sort((a, b) => {
+                if (a.name === '綜合字集') return 1;
+                if (b.name === '綜合字集') return -1;
+                return 0;
+            });
+        }
+
         function renderBadgesModal() {
             const groups = Object.values(getGroupedCollections()).filter(g => g.isBadgeGroup);
-            const earned = groups.filter(g => g.completed);
-            const locked = groups.filter(g => !g.completed);
+            const earned = sortMiscToBottom(groups.filter(g => g.completed));
+            const locked = sortMiscToBottom(groups.filter(g => !g.completed));
 
             document.getElementById('earnedBadgeNum').innerText = earned.length;
             document.getElementById('lockedBadgeNum').innerText = locked.length;
@@ -2008,6 +2024,7 @@
 
         function createBadgeCardHTML(group, isEarned) {
             const safeName = group.name.replace(/"/g, '&quot;');
+            const bottomSpanStyle = group.name === '綜合字集' ? 'style="grid-column: 1 / -1;"' : '';
 
             if (isEarned && !expandedBadges.has(group.name)) {
                 return `
@@ -2018,6 +2035,34 @@
                     </div>
                 `;
             }
+
+            const pills = group.chars.map(c => {
+                const has = unlockedItems.has(c);
+                return `<span class="mini-char ${has ? '' : 'missing'}">${has ? c : '？'}</span>`;
+            }).join('');
+
+            if (isEarned) {
+                return `
+                    <div class="badge-card earned-toggle expanded" ${bottomSpanStyle} data-group="${safeName}" onclick="toggleBadgeExpand(this.dataset.group)" title="點擊收闔徽章">
+                        <div class="badge-emblem">${group.icon}</div>
+                        <div class="badge-name">${group.name} <span class="badge-caret">▴</span></div>
+                        <div style="font-size:0.78rem; color:#fcd34d;">✨ 已集齊全套漢字（點擊收闔）</div>
+                        <div class="badge-chars-pill">${pills}</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="badge-card locked" ${bottomSpanStyle}>
+                    <div class="badge-emblem">${group.icon}</div>
+                    <div class="badge-name">${group.name}</div>
+                    <div style="font-size:0.78rem; color:var(--text-muted);">
+                        收集進度：${group.unlockedCount} / ${group.totalCount} 字
+                    </div>
+                    <div class="badge-chars-pill">${pills}</div>
+                </div>
+            `;
+        }
 
             const pills = group.chars.map(c => {
                 const has = unlockedItems.has(c);
@@ -2047,9 +2092,20 @@
             `;
         }
 
+       // ==========================================
+        // 7. 渲染「主題分類圖鑑」Modal（預設全部縮合＋綜合字集置底）
         // ==========================================
-        // 7. 渲染「主題分類圖鑑」Modal
-        // ==========================================
+        let expandedPokedexGroups = new Set();
+
+        function togglePokedexGroup(groupName) {
+            if (expandedPokedexGroups.has(groupName)) {
+                expandedPokedexGroups.delete(groupName);
+            } else {
+                expandedPokedexGroups.add(groupName);
+            }
+            renderPokedex();
+        }
+
         function setPokedexFilter(filterType, el) {
             pokedexFilter = filterType;
             document.querySelectorAll('.pokedex-tabs .cat-chip').forEach(c => c.classList.remove('active'));
@@ -2061,44 +2117,55 @@
             const container = document.getElementById('pokedexGroupsContainer');
             container.innerHTML = '';
 
-            const groups = Object.values(getGroupedCollections());
+            const groups = sortMiscToBottom(Object.values(getGroupedCollections()));
 
             groups.forEach(group => {
                 if (pokedexFilter === 'earned' && (!group.isBadgeGroup || !group.completed)) return;
                 if (pokedexFilter === 'incomplete' && (!group.isBadgeGroup || group.completed)) return;
 
+                const isExpanded = expandedPokedexGroups.has(group.name);
                 const section = document.createElement('div');
-                section.className = `group-section ${group.isBadgeGroup && group.completed ? 'completed' : ''}`;
+                section.className = `group-section ${group.isBadgeGroup && group.completed ? 'completed' : ''} ${isExpanded ? 'expanded' : ''}`;
 
                 const statusBadge = !group.isBadgeGroup
                     ? `<span class="group-status">基礎原料 (${group.unlockedCount}/${group.totalCount})</span>`
                     : group.completed
                         ? `<span class="group-status earned">🏆 已獲得徽章【${group.name}】</span>`
-                        : `<span class="group-status">進度 ${group.unlockedCount} / ${group.totalCount}（集齊獲徽章）</span>`;
+                        : `<span class="group-status">進度 ${group.unlockedCount} / ${group.totalCount}</span>`;
 
-                const cardsHTML = group.chars.map(id => {
-                    const item = ITEMS[id];
-                    const isUnlocked = unlockedItems.has(id);
-                    return `
-                        <div class="poke-card ${isUnlocked ? '' : 'locked'}">
-                            <div class="poke-title">
-                                <span class="poke-char">${isUnlocked ? id : '？'}</span>
-                                <span style="font-size:0.78rem; color:var(--text-muted);">${isUnlocked ? item.pinyin : '未解鎖'}</span>
-                            </div>
-                            ${isUnlocked ? `<div class="poke-structure">${item.structure}</div>` : ''}
-                            <div class="poke-desc">${isUnlocked ? item.desc : '尚未在熔爐中煉出此字。'}</div>
-                            ${isUnlocked && recipeHistory[id] ? `<button class="btn" style="margin-top:4px; font-size:0.72rem; padding:3px 8px; align-self:flex-start;" onclick="showRecipeTree('${id}')">🌳 查看配方</button>` : ''}
-                        </div>
-                    `;
-                }).join('');
-
-                section.innerHTML = `
-                    <div class="group-header">
-                        <div class="group-title">${group.icon} ${group.name}</div>
-                        ${statusBadge}
+                const header = document.createElement('div');
+                header.className = 'group-header';
+                header.onclick = () => togglePokedexGroup(group.name);
+                header.innerHTML = `
+                    <div class="group-title">
+                        <span style="font-size:0.85rem; color:var(--accent-gold);">${isExpanded ? '▾' : '▸'}</span>
+                        <span>${group.icon} ${group.name}</span>
                     </div>
-                    <div class="pokedex-grid">${cardsHTML}</div>
+                    ${statusBadge}
                 `;
+                section.appendChild(header);
+
+                if (isExpanded) {
+                    const grid = document.createElement('div');
+                    grid.className = 'pokedex-grid';
+                    grid.innerHTML = group.chars.map(id => {
+                        const item = ITEMS[id];
+                        const isUnlocked = unlockedItems.has(id);
+                        return `
+                            <div class="poke-card ${isUnlocked ? '' : 'locked'}">
+                                <div class="poke-title">
+                                    <span class="poke-char">${isUnlocked ? id : '？'}</span>
+                                    <span style="font-size:0.78rem; color:var(--text-muted);">${isUnlocked ? item.pinyin : '未解鎖'}</span>
+                                </div>
+                                ${isUnlocked ? `<div class="poke-structure">${item.structure}</div>` : ''}
+                                <div class="poke-desc">${isUnlocked ? item.desc : '尚未在熔爐中煉出此字。'}</div>
+                                ${isUnlocked && recipeHistory[id] ? `<button class="btn" style="margin-top:4px; font-size:0.72rem; padding:3px 8px; align-self:flex-start;" onclick="event.stopPropagation(); showRecipeTree('${id}')">🌳 查看配方</button>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                    section.appendChild(grid);
+                }
+
                 container.appendChild(section);
             });
         }
@@ -2166,7 +2233,10 @@
         }
 
         function openModal(id) {
-            if (id === 'pokedexModal') renderPokedex();
+            if (id === 'pokedexModal') {
+                expandedPokedexGroups.clear();
+                renderPokedex();
+            }
             if (id === 'badgesModal') renderBadgesModal();
             if (id === 'noticeModal') renderNoticesModal();
             document.getElementById(id).style.display = 'flex';
