@@ -1246,6 +1246,77 @@
             align-items: center;
             gap: 8px;
         }
+        
+        /* 🎯 動態任務引導橫幅 */
+        .quest-banner {
+            width: 100%;
+            max-width: 440px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+            border: 1px solid rgba(251, 191, 36, 0.45);
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+            transition: all 0.25s ease;
+        }
+        .quest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .quest-tag {
+            font-size: 0.74rem;
+            font-weight: bold;
+            color: #000;
+            background: var(--accent-gold);
+            padding: 1px 8px;
+            border-radius: 999px;
+        }
+        .quest-reward {
+            font-size: 0.78rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+        .quest-title {
+            font-size: 0.92rem;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 3px;
+        }
+        .quest-clue {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
+        .quest-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .quest-mini-btn {
+            background: rgba(251, 191, 36, 0.14);
+            border: 1px solid rgba(251, 191, 36, 0.45);
+            color: #fde68a;
+            font-size: 0.75rem;
+            padding: 3px 9px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .quest-mini-btn:hover {
+            background: rgba(251, 191, 36, 0.28);
+        }
+        @media (max-width: 768px) {
+            .quest-banner {
+                padding: 8px 10px;
+                margin-bottom: 8px;
+            }
+            .quest-title { font-size: 0.84rem; }
+            .quest-clue { font-size: 0.75rem; }
+        }
     </style>
 </head>
 <body>
@@ -1290,8 +1361,14 @@
 
         <!-- 右側：三槽文字熔爐 -->
         <section class="workspace">
-            <div class="workspace-hint">
-                集齊同一主題分類的所有漢字，即可解鎖專屬<strong>【成就徽章】</strong>並獲得 <strong>3 金幣</strong>！
+            <div class="quest-banner" id="questBanner">
+                <div class="quest-header">
+                    <span class="quest-tag" id="questStageTag">📜 煉字任務</span>
+                    <span class="quest-reward" id="questRewardText">獎勵 +2 🪙</span>
+                </div>
+                <div class="quest-title" id="questTitle">正在讀取煉字卷軸...</div>
+                <div class="quest-clue" id="questClue">集齊同一主題分類的所有漢字，即可解鎖成就徽章！</div>
+                <div class="quest-actions" id="questActions"></div>
             </div>
 
             <div class="furnace-circle" id="furnaceCircle">
@@ -2186,7 +2263,7 @@
             `;
         }
 
-// ==========================================
+        // ==========================================
         // 新手教學聚光燈引導系統
         // ==========================================
         const TUTORIAL_STORAGE_KEY = 'hanzi_smelter_tutorial_done';
@@ -2386,6 +2463,206 @@
                 }
             }
         });
+
+        // ==========================================
+        // 5.5 動態時間線任務引擎（自動依進度生成引導）
+        // ==========================================
+        let completedQuestIds = new Set();
+        let currentActiveQuest = null;
+
+        // 建立「結果字 -> 配方原料陣列」的反向查詢表
+        function buildReverseRecipeMap() {
+            const map = {};
+            Object.entries(RECIPES).forEach(([ingKey, resChar]) => {
+                if (!map[resChar]) {
+                    map[resChar] = ingKey.split('+');
+                }
+            });
+            return map;
+        }
+
+        // 遮罩字義中的答案字，避免直接暴雷
+        function maskTargetDesc(char, desc) {
+            if (!desc) return '試著觀察字形結構，將相關的字根投入熔爐！';
+            const escaped = char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return desc.replace(new RegExp(escaped, 'g'), '□');
+        }
+
+        // 依照玩家目前解鎖進度，動態決定當前最適合的任務
+        function evaluateCurrentQuest() {
+            const reverseMap = buildReverseRecipeMap();
+            const groups = Object.values(getGroupedCollections()).filter(g => g.isBadgeGroup);
+            const totalUnlocked = Array.from(unlockedItems).filter(c => ITEMS[c]).length;
+            const initialCount = INITIAL_UNLOCKED.length;
+            const newCraftedCount = Math.max(0, totalUnlocked - initialCount);
+
+            // 找出所有「尚未解鎖、但材料已全部齊全（保證不卡關）」的可合成字
+            const craftablePool = [];
+            Object.entries(reverseMap).forEach(([char, ingredients]) => {
+                if (!ITEMS[char] || unlockedItems.has(char)) return;
+                if (ingredients.every(ing => unlockedItems.has(ing))) {
+                    craftablePool.push({
+                        char,
+                        info: ITEMS[char],
+                        ingredients,
+                        themes: (ITEMS[char].groups || []).filter(g => g !== '基礎字根')
+                    });
+                }
+            });
+
+            // 1. 檢查是否還有「正在進行中且目標尚未解鎖」的任務（保持任務穩定不亂跳）
+            if (currentActiveQuest && currentActiveQuest.targetChar && !unlockedItems.has(currentActiveQuest.targetChar)) {
+                return currentActiveQuest;
+            }
+
+            // 2. 若全部字都已解鎖
+            if (craftablePool.length === 0) {
+                const lockedTotal = Object.keys(ITEMS).length - totalUnlocked;
+                if (lockedTotal <= 0) {
+                    return {
+                        id: 'all_clear',
+                        stage: '🏆 宗師圓滿',
+                        title: '恭喜！你已煉出全圖鑑所有漢字！',
+                        clue: '所有的造字奧秘皆已收入囊中，歡迎前往徽章陳列館欣賞你的成就。',
+                        reward: 0,
+                        targetChar: null,
+                        hintIngredient: null
+                    };
+                }
+                return null;
+            }
+
+            // 3. 【階段一：破冰期】（剛開始遊戲，煉出不到 3 個新字）
+            if (newCraftedCount < 3) {
+                const twoSlot = craftablePool.filter(c => c.ingredients.length === 2);
+                const pick = (twoSlot.length ? twoSlot : craftablePool)[0];
+                return {
+                    id: `stage1_${pick.char}`,
+                    stage: `🌱 階段 I · 煉字入門 (${newCraftedCount + 1}/3)`,
+                    title: `煉出你的第 ${newCraftedCount + 1} 個新字（注音：${pick.info.pinyin}）`,
+                    clue: `結構為「${pick.info.structure}」，字義線索：${maskTargetDesc(pick.char, pick.info.desc)}`,
+                    reward: 2,
+                    targetChar: pick.char,
+                    hintIngredient: pick.ingredients[0]
+                };
+            }
+
+            // 4. 【階段三優先插隊：徽章臨門一腳】（有任何主題只差 1 字就集齊，且該字材料已齊全）
+            for (const g of groups) {
+                if (!g.completed && g.totalCount - g.unlockedCount === 1) {
+                    const missingChar = g.chars.find(c => !unlockedItems.has(c));
+                    const found = craftablePool.find(c => c.char === missingChar);
+                    if (found) {
+                        return {
+                            id: `badge_finish_${g.name}`,
+                            stage: `🔥 徽章衝刺 · 只差最後 1 字！`,
+                            title: `集齊【${g.icon} ${g.name}】最後拼圖（${found.info.pinyin}）`,
+                            clue: `完成後可立即解鎖徽章！線索：${maskTargetDesc(found.char, found.info.desc)}`,
+                            reward: 3,
+                            targetChar: found.char,
+                            hintIngredient: found.ingredients[0]
+                        };
+                    }
+                }
+            }
+
+            // 5. 【階段四：三槽高階挑戰】（解鎖 >= 6 字後，若有三字配方可合，引導體驗三槽）
+            if (newCraftedCount >= 6 && !completedQuestIds.has('first_3slot_done')) {
+                const threeSlot = craftablePool.find(c => c.ingredients.length === 3);
+                if (threeSlot) {
+                    return {
+                        id: 'first_3slot_done',
+                        stage: '⚗️ 階段 III · 三才熔煉',
+                        title: `挑戰同時使用 3 個爐位煉出新字（${threeSlot.info.pinyin}）`,
+                        clue: `需要三個部件融合！線索：${maskTargetDesc(threeSlot.char, threeSlot.info.desc)}`,
+                        reward: 4,
+                        targetChar: threeSlot.char,
+                        hintIngredient: threeSlot.ingredients[0]
+                    };
+                }
+            }
+
+            // 6. 【階段二：主題探索期】（挑選「已解鎖部分字、進度最高」的主題來推進）
+            const inProgressGroups = groups
+                .filter(g => !g.completed && g.unlockedCount > 0)
+                .sort((a, b) => (b.unlockedCount / b.totalCount) - (a.unlockedCount / a.totalCount));
+
+            for (const g of inProgressGroups) {
+                const candidate = craftablePool.find(c => c.themes.includes(g.name));
+                if (candidate) {
+                    return {
+                        id: `theme_${g.name}_${candidate.char}`,
+                        stage: `🧭 階段 II · 主題探索（${g.name} ${g.unlockedCount}/${g.totalCount}）`,
+                        title: `推進【${g.icon} ${g.name}】圖鑑：煉出「${candidate.info.pinyin}」`,
+                        clue: `線索：${maskTargetDesc(candidate.char, candidate.info.desc)}`,
+                        reward: 2,
+                        targetChar: candidate.char,
+                        hintIngredient: candidate.ingredients[0]
+                    };
+                }
+            }
+
+            // 7. 【階段五：智慧雷達保底】（隨機挑一個材料已全齊的未解鎖字）
+            const fallback = craftablePool[0];
+            const themeLabel = fallback.themes[0] || '綜合字集';
+            return {
+                id: `radar_${fallback.char}`,
+                stage: `✨ 階段 IV · 秘傳煉字（${themeLabel}）`,
+                title: `嘗試煉出【${themeLabel}】的「${fallback.info.pinyin}」字`,
+                clue: `${fallback.info.structure}｜${maskTargetDesc(fallback.char, fallback.info.desc)}`,
+                reward: 2,
+                targetChar: fallback.char,
+                hintIngredient: fallback.ingredients[0]
+            };
+        }
+
+        function updateQuestBanner(justUnlockedChar = null) {
+            const banner = document.getElementById('questBanner');
+            if (!banner) return;
+
+            // 若剛煉出的字正好是當前任務目標，發放任務金幣獎勵
+            if (justUnlockedChar && currentActiveQuest && currentActiveQuest.targetChar === justUnlockedChar) {
+                completedQuestIds.add(currentActiveQuest.id);
+                if (currentActiveQuest.reward > 0) {
+                    userCoins += currentActiveQuest.reward;
+                    updateCoinUI();
+                    setTimeout(() => {
+                        showToast(`📜 達成任務目標！額外獲得 +${currentActiveQuest.reward} 🪙`);
+                    }, 1200);
+                }
+                currentActiveQuest = null;
+            }
+
+            currentActiveQuest = evaluateCurrentQuest();
+            if (!currentActiveQuest) {
+                banner.style.display = 'none';
+                return;
+            }
+
+            banner.style.display = 'block';
+            document.getElementById('questStageTag').innerText = currentActiveQuest.stage;
+            document.getElementById('questRewardText').innerText = currentActiveQuest.reward > 0 ? `任務獎勵 +${currentActiveQuest.reward} 🪙` : '已全部完成';
+            document.getElementById('questTitle').innerText = currentActiveQuest.title;
+            document.getElementById('questClue').innerText = currentActiveQuest.clue;
+
+            const actionsEl = document.getElementById('questActions');
+            if (currentActiveQuest.hintIngredient && unlockedItems.has(currentActiveQuest.hintIngredient)) {
+                actionsEl.innerHTML = `
+                    <button class="quest-mini-btn" onclick="applyQuestHintSlot()">
+                        💡 提示：放入關鍵字「${currentActiveQuest.hintIngredient}」
+                    </button>
+                `;
+            } else {
+                actionsEl.innerHTML = '';
+            }
+        }
+
+        function applyQuestHintSlot() {
+            if (!currentActiveQuest || !currentActiveQuest.hintIngredient) return;
+            clearAllSlots();
+            selectCard(currentActiveQuest.hintIngredient);
+            showToast(`💡 已將線索原料【${currentActiveQuest.hintIngredient}】放入爐位 1，請搭配另一個字試試！`);
+        }
         
         // ==========================================
         // 6. 遊戲核心互動邏輯
@@ -2397,6 +2674,7 @@
             checkAndAwardBadgeCoins(false);
             renderInventory();
             updateProgress();
+            updateQuestBanner();
             if (NOTICES.length > 0) {
                 openModal('noticeModal');
             } else if (!localStorage.getItem(TUTORIAL_STORAGE_KEY)) {
@@ -2526,6 +2804,7 @@
                     showToast(`🔥 熔煉成功：【${resultId}】`, false, detailData);
                 }
 
+                updateQuestBanner(resultId);
                 saveProgress();
                 updateProgress();
             } else {
