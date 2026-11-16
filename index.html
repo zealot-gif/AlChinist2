@@ -1009,6 +1009,45 @@
             }
         }
         }
+        /* 公告通知卡片樣式 */
+        .notice-card {
+            background: #131c2e;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-gold);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+        }
+
+        .notice-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .notice-card-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+
+        .notice-card-date {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .notice-card-content {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            line-height: 1.65;
+            white-space: pre-line;
+            user-select: text;
+        }
     </style>
 </head>
 <body>
@@ -1027,6 +1066,7 @@
         <div class="btn-group">
             <button class="btn btn-badge" onclick="openModal('badgesModal')">🏆 已獲得徽章 (<span id="badgeCountText">0/0</span>)</button>
             <button class="btn btn-primary" onclick="openModal('pokedexModal')">📜 分類圖鑑</button>
+            <button class="btn" onclick="openModal('noticeModal')">📢 公告</button>
             <button class="btn" id="userAuthBtn" onclick="openAuthModal()">👤 登入 / 註冊</button>
         </div>
     </header>
@@ -1158,6 +1198,17 @@
         </div>
     </div>
 
+    <!-- 📢 最新公告與通知 Modal -->
+    <div class="modal-overlay" id="noticeModal" onclick="if(event.target === this) closeModal('noticeModal')">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>📢 最新公告與通知</h3>
+                <button class="btn" onclick="closeModal('noticeModal')">✕</button>
+            </div>
+            <div class="modal-body" id="noticeModalBody"></div>
+        </div>
+    </div>
+    
     <script>
         // ==========================================
         // 1. Google 試算表與 Apps Script 設定區
@@ -1166,7 +1217,9 @@
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwPnMr9Rxah0xv7in0-EIcrrEB9VBitZVXaRGWvA1tCkiq6KA4_58c8i1wUirT_K6KOg/exec'; // 👈 請貼上步驟一部署的網頁應用程式 URL（結尾為 /exec）
         const ITEMS_SHEET_NAME = 'Items';
         const RECIPES_SHEET_NAME = 'Recipes';
-
+        const NOTICES_SHEET_NAME = 'Notices';
+        let NOTICES = [];
+        
         // 離線或連線異常時的保底字庫
         let ITEMS = {
             '疒': { pinyin: 'ㄋㄧˋ', cats: ['部首'], structure: '象形字', desc: '倚靠病床之形，所有疾病相關漢字的部首。', groups: ['基礎字根'], groupIcons: [''] },
@@ -1295,9 +1348,10 @@
 
             try {
                 const baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=`;
-                const [itemsRes, recipesRes] = await Promise.all([
+                const [itemsRes, recipesRes, noticesRes] = await Promise.all([
                     fetch(baseUrl + encodeURIComponent(ITEMS_SHEET_NAME)),
-                    fetch(baseUrl + encodeURIComponent(RECIPES_SHEET_NAME))
+                    fetch(baseUrl + encodeURIComponent(RECIPES_SHEET_NAME)),
+                    fetch(baseUrl + encodeURIComponent(NOTICES_SHEET_NAME)).catch(() => null)
                 ]);
 
                 const itemsText = await itemsRes.text();
@@ -1305,6 +1359,24 @@
 
                 if (!itemsRes.ok || itemsText.trim().startsWith('<!DOCTYPE')) {
                     throw new Error('試算表權限未公開或分頁名稱錯誤');
+                }
+
+                if (noticesRes && noticesRes.ok) {
+                    const noticesText = await noticesRes.text();
+                    if (!noticesText.trim().startsWith('<!DOCTYPE')) {
+                        const parsedNoticeRows = parseCSV(noticesText);
+                        const headerFirstCell = (parsedNoticeRows[0]?.[0] || '').toLowerCase();
+                        if (headerFirstCell === 'title' || headerFirstCell === '標題') {
+                            NOTICES = parsedNoticeRows.slice(1)
+                                .map(cols => ({
+                                    title: (cols[0] || '').trim(),
+                                    content: (cols[1] || '').trim(),
+                                    date: (cols[2] || '').trim(),
+                                    active: (cols[3] || 'TRUE').trim().toUpperCase()
+                                }))
+                                .filter(n => (n.title || n.content) && n.active !== 'FALSE');
+                        }
+                    }
                 }
 
                 const itemRows = parseCSV(itemsText).slice(1);
@@ -1667,6 +1739,9 @@
             await restoreUserSession();
             renderInventory();
             updateProgress();
+            if (NOTICES.length > 0) {
+                openModal('noticeModal');
+            }
         };
 
         function countInSlots(id) {
@@ -2055,19 +2130,47 @@
             openModal('recipeTreeModal');
         }
 
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function renderNoticesModal() {
+            const body = document.getElementById('noticeModalBody');
+            if (!body) return;
+
+            if (NOTICES.length === 0) {
+                body.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px 0;">目前沒有最新公告通知。</div>`;
+                return;
+            }
+
+            const listHTML = NOTICES.map(n => `
+                <div class="notice-card">
+                    <div class="notice-card-header">
+                        <span class="notice-card-title">${escapeHTML(n.title || '系統通知')}</span>
+                        ${n.date ? `<span class="notice-card-date">${escapeHTML(n.date)}</span>` : ''}
+                    </div>
+                    <div class="notice-card-content">${escapeHTML(n.content)}</div>
+                </div>
+            `).join('');
+
+            body.innerHTML = `
+                ${listHTML}
+                <div style="text-align:center; margin-top:18px;">
+                    <button class="btn btn-primary" style="margin:0 auto; padding:8px 32px; font-size:0.95rem;" onclick="closeModal('noticeModal')">✓ 知道了，開始煉字</button>
+                </div>
+            `;
+        }
+
         function openModal(id) {
             if (id === 'pokedexModal') renderPokedex();
             if (id === 'badgesModal') renderBadgesModal();
+            if (id === 'noticeModal') renderNoticesModal();
             document.getElementById(id).style.display = 'flex';
         }
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-            if (id === 'pokedexModal') {
-                toggleResetPanel(false);
-            }
-        }
-
         function toggleResetPanel(show) {
             const box = document.getElementById('resetConfirmBox');
             const openBtn = document.getElementById('openResetZoneBtn');
