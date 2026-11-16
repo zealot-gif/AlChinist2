@@ -2171,6 +2171,15 @@
             if (id === 'noticeModal') renderNoticesModal();
             document.getElementById(id).style.display = 'flex';
         }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.style.display = 'none';
+            if (id === 'pokedexModal') {
+                toggleResetPanel(false);
+            }
+        }
+
         function toggleResetPanel(show) {
             const box = document.getElementById('resetConfirmBox');
             const openBtn = document.getElementById('openResetZoneBtn');
