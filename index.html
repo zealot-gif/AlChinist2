@@ -168,9 +168,10 @@
             position: relative;
         }
 
-        /* 左側字庫 */
+        /* 左側字庫（加寬顯示） */
         .sidebar {
-            width: 320px;
+            width: 380px;
+            max-width: 46vw;
             flex-shrink: 0;
             height: 100%;
             min-height: 0;
@@ -182,7 +183,7 @@
         }
 
         .search-box {
-            padding: 12px;
+            padding: 10px 12px;
             border-bottom: 1px solid var(--border-color);
             flex-shrink: 0;
         }
@@ -192,7 +193,7 @@
             background: #0f172a;
             border: 1px solid var(--border-color);
             color: var(--text-main);
-            padding: 8px 12px;
+            padding: 7px 10px;
             border-radius: 6px;
             outline: none;
             user-select: text;
@@ -200,18 +201,18 @@
 
         .category-filter {
             display: flex;
-            gap: 4px;
-            padding: 8px 12px;
+            gap: 3px;
+            padding: 6px 8px;
             overflow-x: auto;
             border-bottom: 1px solid var(--border-color);
             flex-shrink: 0;
         }
 
         .cat-chip {
-            font-size: 0.75rem;
-            padding: 3px 8px;
+            font-size: 0.74rem;
+            padding: 2px 6px;
             background: #334155;
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             white-space: nowrap;
             color: var(--text-muted);
@@ -228,25 +229,26 @@
             min-height: 0;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 12px 12px 28px;
+            padding: 10px 10px 28px;
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             align-content: flex-start;
         }
 
-        /* 漢字卡片樣式 */
+        /* 漢字卡片樣式（左側字庫僅顯示漢字，桌面字級精簡） */
         .card {
             background: #0f172a;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 8px 12px;
-            font-size: 1.05rem;
+            border-radius: 7px;
+            padding: 6px 10px;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: all 0.15s ease;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             position: relative;
         }
@@ -265,8 +267,9 @@
 
         .card-char {
             font-family: "KaiTi", "BiauKai", "DFKai-SB", serif;
-            font-size: 1.25rem;
+            font-size: 1.05rem;
             font-weight: bold;
+            line-height: 1.2;
         }
 
         .card-symbol {
@@ -278,11 +281,11 @@
         .card-badge {
             background: var(--accent-ember);
             color: #fff;
-            font-size: 0.65rem;
+            font-size: 0.62rem;
             font-weight: bold;
-            padding: 1px 5px;
-            border-radius: 10px;
-            margin-left: 2px;
+            padding: 1px 4px;
+            border-radius: 8px;
+            margin-left: 1px;
         }
 
         /* 右側熔爐工作檯 */
@@ -436,7 +439,7 @@
             border-color: var(--text-muted);
         }
 
-        /* 🎯 右側可收合任務抽屜（平時縮合在右邊，點擊才跑出） */
+        /* 🎯 右側可收合任務抽屜（平時縮合在右邊，點擊標籤才滑出） */
         .quest-drawer {
             position: fixed;
             right: 0;
@@ -1216,7 +1219,7 @@
             background: #b91c1c;
         }
 
-        /* 窄螢幕響應式微調（字庫始終固定在左側，不移到底部） */
+        /* 窄螢幕響應式微調（字庫始終固定在左側，保持足夠寬度） */
         @media (max-width: 768px) {
             body {
                 position: fixed;
@@ -1244,60 +1247,67 @@
                 font-size: 0.78rem;
             }
             .sidebar {
-                width: 155px;
+                width: 44vw;
+                min-width: 175px;
+                max-width: 240px;
                 flex-shrink: 0;
                 border-right: 1px solid var(--border-color);
             }
             .search-box {
-                padding: 8px;
+                padding: 6px 8px;
             }
             .search-box input {
-                padding: 6px 8px;
-                font-size: 0.82rem;
+                padding: 5px 8px;
+                font-size: 0.8rem;
             }
             .category-filter {
-                padding: 6px 8px;
+                padding: 5px 6px;
+                gap: 2px;
+            }
+            .cat-chip {
+                font-size: 0.7rem;
+                padding: 2px 5px;
             }
             .inventory-list {
-                padding: 8px 8px calc(72px + env(safe-area-inset-bottom, 0px));
-                gap: 6px;
+                padding: 6px 6px calc(72px + env(safe-area-inset-bottom, 0px));
+                gap: 5px;
             }
             .card {
-                padding: 6px 8px;
-                gap: 4px;
+                padding: 5px 8px;
+                gap: 3px;
             }
             .card-char {
-                font-size: 1.15rem;
+                font-size: 1.05rem;
             }
             .workspace {
-                padding: 46px 10px 16px;
+                padding: 46px 8px 16px;
             }
             .furnace-circle {
-                width: 192px;
-                height: 192px;
+                width: 184px;
+                height: 184px;
                 margin-bottom: 14px;
             }
             .slot {
-                width: 58px;
-                height: 58px;
+                width: 56px;
+                height: 56px;
                 border-radius: 10px;
             }
-            .slot-0 { top: 10px; }
-            .slot-1 { bottom: 16px; left: 16px; }
-            .slot-2 { bottom: 16px; right: 16px; }
+            .slot-0 { top: 9px; }
+            .slot-1 { bottom: 15px; left: 15px; }
+            .slot-2 { bottom: 15px; right: 15px; }
             .slot-char {
-                font-size: 1.4rem;
+                font-size: 1.35rem;
             }
             .furnace-core {
-                font-size: 1.1rem;
+                font-size: 1.05rem;
             }
             .action-row {
                 flex-direction: column;
                 gap: 8px;
             }
             .combine-btn {
-                font-size: 0.92rem;
-                padding: 8px 22px;
+                font-size: 0.9rem;
+                padding: 8px 20px;
             }
             .clear-btn {
                 padding: 6px 14px;
@@ -2801,7 +2811,6 @@
                 card.onclick = () => selectCard(id);
                 card.innerHTML = `
                     <span class="card-char">${id}</span>
-                    <span class="card-symbol">${item.pinyin}</span>
                     ${count > 0 ? `<span class="card-badge">×${count}</span>` : ''}
                 `;
                 listEl.appendChild(card);
