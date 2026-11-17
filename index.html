@@ -48,6 +48,7 @@
             flex-wrap: wrap;
             gap: 10px;
             flex-shrink: 0;
+            z-index: 15;
         }
 
         .title-group h1 {
@@ -157,23 +158,27 @@
             background: rgba(16, 185, 129, 0.28);
         }
 
-        /* 主要遊玩區域 */
+        /* 主要遊玩區域（始終維持左右並排，不因螢幕變窄而上下堆疊） */
         main {
             display: flex;
+            flex-direction: row;
             flex: 1;
             min-height: 0;
             overflow: hidden;
+            position: relative;
         }
 
         /* 左側字庫 */
         .sidebar {
-            width: 330px;
+            width: 320px;
+            flex-shrink: 0;
             height: 100%;
             min-height: 0;
             background-color: var(--panel-bg);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            z-index: 5;
         }
 
         .search-box {
@@ -280,9 +285,10 @@
             margin-left: 2px;
         }
 
-        /* 右側熔爐工作檯（固定靠上對齊，不隨左側字庫拉長） */
+        /* 右側熔爐工作檯 */
         .workspace {
             flex: 1;
+            min-width: 0;
             height: 100%;
             min-height: 0;
             overflow-y: auto;
@@ -290,10 +296,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             position: relative;
-            background: radial-gradient(circle at top center, #261b18 0%, #0f172a 75%);
-            padding: 54px 20px 24px;
+            background: radial-gradient(circle at center, #261b18 0%, #0f172a 75%);
+            padding: 56px 24px 24px;
         }
 
         .workspace-hint {
@@ -312,7 +318,7 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            margin-bottom: 18px;
+            margin-bottom: 22px;
             transition: all 0.3s;
             flex-shrink: 0;
         }
@@ -430,7 +436,151 @@
             border-color: var(--text-muted);
         }
 
-        /* 提示通知 Log（置於工作檯頂部，避免遮擋下方熔煉按鈕） */
+        /* 🎯 右側可收合任務抽屜（平時縮合在右邊，點擊才跑出） */
+        .quest-drawer {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%) translateX(calc(100% - 38px));
+            display: flex;
+            align-items: stretch;
+            z-index: 40;
+            transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            max-width: calc(100vw - 12px);
+        }
+
+        .quest-drawer.open {
+            transform: translateY(-50%) translateX(0);
+        }
+
+        .quest-drawer-tab {
+            width: 38px;
+            flex-shrink: 0;
+            background: linear-gradient(180deg, #78350f, #451a03);
+            border: 1.5px solid var(--accent-gold);
+            border-right: none;
+            border-radius: 12px 0 0 12px;
+            color: #fef3c7;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 14px 4px;
+            box-shadow: -4px 4px 16px rgba(0, 0, 0, 0.45);
+            transition: background 0.2s;
+        }
+
+        .quest-drawer-tab:hover {
+            background: linear-gradient(180deg, #92400e, #78350f);
+        }
+
+        .quest-tab-icon {
+            font-size: 1.15rem;
+            line-height: 1;
+        }
+
+        .quest-tab-label {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            font-size: 0.82rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: var(--accent-gold);
+        }
+
+        .quest-tab-arrow {
+            font-size: 0.72rem;
+            color: #fde68a;
+        }
+
+        .quest-drawer-panel {
+            width: 310px;
+            max-width: calc(100vw - 50px);
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.99));
+            border: 1.5px solid rgba(251, 191, 36, 0.55);
+            border-right: none;
+            border-radius: 0 0 0 12px;
+            padding: 14px 16px;
+            box-shadow: -8px 8px 28px rgba(0, 0, 0, 0.6);
+        }
+
+        .quest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .quest-tag {
+            font-size: 0.72rem;
+            font-weight: bold;
+            color: #000;
+            background: var(--accent-gold);
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
+        .quest-reward {
+            font-size: 0.76rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+        }
+
+        .quest-close-mini {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            border-radius: 6px;
+            padding: 1px 7px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .quest-close-mini:hover {
+            color: var(--text-main);
+            border-color: var(--accent-gold);
+        }
+
+        .quest-title {
+            font-size: 0.94rem;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .quest-clue {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+        }
+
+        .quest-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quest-mini-btn {
+            background: rgba(251, 191, 36, 0.16);
+            border: 1px solid rgba(251, 191, 36, 0.5);
+            color: #fde68a;
+            font-size: 0.78rem;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .quest-mini-btn:hover {
+            background: rgba(251, 191, 36, 0.3);
+        }
+
+        /* 提示通知 Log（置於工作檯頂部） */
         .log-toast {
             position: absolute;
             top: 14px;
@@ -1066,9 +1216,8 @@
             background: #b91c1c;
         }
 
-        /* 手機與窄螢幕響應式配置 */
-        /* 窄螢幕與手機響應式配置：熔爐常駐全畫面，字庫與任務皆可從右側叫出/拖曳 */
-        @media (max-width: 860px) {
+        /* 窄螢幕響應式微調（字庫始終固定在左側，不移到底部） */
+        @media (max-width: 768px) {
             body {
                 position: fixed;
                 inset: 0;
@@ -1077,121 +1226,90 @@
                 overflow: hidden;
             }
             header {
-                padding: 8px 12px;
+                padding: 8px 10px;
                 gap: 6px;
             }
             .title-group h1 {
-                font-size: 1.05rem;
+                font-size: 1rem;
             }
-            main {
-                flex-direction: column;
-                flex: 1;
-                min-height: 0;
-                height: auto;
+            .progress-bar-container {
+                padding: 4px 10px;
+                gap: 8px;
+            }
+            .progress-bar {
+                width: 70px;
+            }
+            button.btn {
+                padding: 4px 8px;
+                font-size: 0.78rem;
+            }
+            .sidebar {
+                width: 155px;
+                flex-shrink: 0;
+                border-right: 1px solid var(--border-color);
+            }
+            .search-box {
+                padding: 8px;
+            }
+            .search-box input {
+                padding: 6px 8px;
+                font-size: 0.82rem;
+            }
+            .category-filter {
+                padding: 6px 8px;
+            }
+            .inventory-list {
+                padding: 8px 8px calc(72px + env(safe-area-inset-bottom, 0px));
+                gap: 6px;
+            }
+            .card {
+                padding: 6px 8px;
+                gap: 4px;
+            }
+            .card-char {
+                font-size: 1.15rem;
             }
             .workspace {
-                flex: 1;
-                width: 100%;
-                height: 100%;
-                padding: 28px 14px 20px;
-                justify-content: center;
-            }
-            .workspace-hint {
-                font-size: 0.78rem;
-                margin-bottom: 12px;
-                padding: 0 28px;
+                padding: 46px 10px 16px;
             }
             .furnace-circle {
-                width: 224px;
-                height: 224px;
-                margin-bottom: 16px;
+                width: 192px;
+                height: 192px;
+                margin-bottom: 14px;
             }
             .slot {
-                width: 68px;
-                height: 68px;
-                border-radius: 11px;
+                width: 58px;
+                height: 58px;
+                border-radius: 10px;
             }
-            .slot-0 { top: 12px; }
-            .slot-1 { bottom: 18px; left: 18px; }
-            .slot-2 { bottom: 18px; right: 18px; }
+            .slot-0 { top: 10px; }
+            .slot-1 { bottom: 16px; left: 16px; }
+            .slot-2 { bottom: 16px; right: 16px; }
             .slot-char {
-                font-size: 1.6rem;
+                font-size: 1.4rem;
             }
             .furnace-core {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
+            }
+            .action-row {
+                flex-direction: column;
+                gap: 8px;
             }
             .combine-btn {
-                font-size: 1rem;
-                padding: 10px 28px;
+                font-size: 0.92rem;
+                padding: 8px 22px;
             }
             .clear-btn {
-                padding: 9px 14px;
-                font-size: 0.85rem;
+                padding: 6px 14px;
+                font-size: 0.78rem;
             }
             .log-toast {
                 top: 8px;
-                bottom: auto;
-                padding: 8px 14px;
-                font-size: 0.82rem;
-            }
-            /* 字庫改為右側滑出／手勢拖曳抽屜 */
-            .edge-tab.inventory-tab {
-                display: flex;
-            }
-            .sidebar-drawer-header {
-                display: flex;
-            }
-            .sidebar {
-                position: fixed;
-                top: 0;
-                right: 0;
-                bottom: 0;
-                width: min(86vw, 340px);
-                height: 100dvh;
-                z-index: 90;
-                border-right: none;
-                border-left: 1.5px solid var(--accent-blue);
-                box-shadow: -8px 0 28px rgba(0, 0, 0, 0.65);
-                transform: translateX(100%);
-                transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-            }
-            .sidebar.open {
-                transform: translateX(0);
-            }
-            .sidebar.dragging {
-                transition: none;
-            }
-            .search-box {
-                padding: 8px 10px;
-            }
-            .search-box input {
                 padding: 7px 10px;
-                font-size: 0.85rem;
-            }
-            .category-filter {
-                padding: 6px 10px;
-            }
-            .inventory-list {
-                padding: 10px 10px calc(72px + env(safe-area-inset-bottom, 0px));
-                gap: 7px;
-            }
-            .tutorial-card {
-                padding: 12px 14px;
-            }
-            .tutorial-title {
-                font-size: 0.98rem;
-                margin-bottom: 4px;
-            }
-            .tutorial-desc {
-                font-size: 0.82rem;
-                line-height: 1.45;
-                margin-bottom: 8px;
-            }
-            .tutorial-demo-box {
-                padding: 6px 8px;
-                margin-bottom: 8px;
+                font-size: 0.78rem;
             }
         }
+
         /* 聚光燈互動式新手教學 */
         .tutorial-overlay {
             position: fixed;
@@ -1284,180 +1402,6 @@
             align-items: center;
             gap: 8px;
         }
-        
-        /* 🎯 動態任務引導橫幅 */
-        .quest-banner {
-            width: 100%;
-            max-width: 440px;
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
-            border: 1px solid rgba(251, 191, 36, 0.45);
-            border-left: 4px solid var(--accent-gold);
-            border-radius: 10px;
-            padding: 10px 14px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-            transition: all 0.25s ease;
-        }
-        .quest-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 5px;
-        }
-        .quest-tag {
-            font-size: 0.74rem;
-            font-weight: bold;
-            color: #000;
-            background: var(--accent-gold);
-            padding: 1px 8px;
-            border-radius: 999px;
-        }
-        .quest-reward {
-            font-size: 0.78rem;
-            font-weight: bold;
-            color: var(--accent-gold);
-        }
-        .quest-title {
-            font-size: 0.92rem;
-            font-weight: bold;
-            color: var(--text-main);
-            margin-bottom: 3px;
-        }
-        .quest-clue {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            line-height: 1.45;
-        }
-        .quest-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .quest-mini-btn {
-            background: rgba(251, 191, 36, 0.14);
-            border: 1px solid rgba(251, 191, 36, 0.45);
-            color: #fde68a;
-            font-size: 0.75rem;
-            padding: 3px 9px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .quest-mini-btn:hover {
-            background: rgba(251, 191, 36, 0.28);
-        }
-        @media (max-width: 768px) {
-            .quest-banner {
-                padding: 8px 10px;
-                margin-bottom: 8px;
-            }
-            .quest-title { font-size: 0.84rem; }
-            .quest-clue { font-size: 0.75rem; }
-        }
-        /* 右側滑出抽屜遮罩 */
-        .drawer-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(2px);
-            z-index: 84;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.25s ease;
-        }
-        .drawer-backdrop.open {
-            display: block;
-            opacity: 1;
-        }
-
-        /* 右側邊緣懸浮書籤按鈕 */
-        .right-edge-tabs {
-            position: fixed;
-            right: 0;
-            top: 120px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 83;
-        }
-
-        .edge-tab {
-            writing-mode: vertical-rl;
-            text-orientation: upright;
-            background: linear-gradient(180deg, #1e293b, #0f172a);
-            color: var(--accent-gold);
-            border: 1.5px solid var(--accent-gold);
-            border-right: none;
-            border-radius: 10px 0 0 10px;
-            padding: 12px 7px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-            cursor: pointer;
-            box-shadow: -4px 4px 14px rgba(0, 0, 0, 0.45);
-            transition: transform 0.2s ease, background 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .edge-tab:hover {
-            transform: translateX(-3px);
-            background: #291d0e;
-        }
-
-        .edge-tab.inventory-tab {
-            display: none; /* 寬螢幕左側已有字庫時隱藏，縮小螢幕自動顯示 */
-            color: var(--accent-blue);
-            border-color: var(--accent-blue);
-        }
-
-        /* 右側任務收合抽屜 */
-        .quest-drawer {
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: min(88vw, 380px);
-            background: var(--panel-bg);
-            border-left: 1.5px solid var(--accent-gold);
-            box-shadow: -8px 0 28px rgba(0, 0, 0, 0.65);
-            z-index: 92;
-            transform: translateX(100%);
-            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .quest-drawer.open {
-            transform: translateX(0);
-        }
-
-        .quest-drawer-header {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .quest-drawer-body {
-            padding: 16px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        /* 字庫抽屜頂部標題列（僅在窄螢幕右側抽屜模式顯示） */
-        .sidebar-drawer-header {
-            display: none;
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--border-color);
-            justify-content: space-between;
-            align-items: center;
-            background: #131c2e;
-            flex-shrink: 0;
-        }
     </style>
 </head>
 <body>
@@ -1484,12 +1428,8 @@
     </header>
 
     <main>
-        <!-- 左側：漢字庫 -->
-        <aside class="sidebar" id="inventorySidebar">
-            <div class="sidebar-drawer-header">
-                <span style="font-weight:bold; color:var(--accent-blue); font-size:0.95rem;">📚 漢字原料庫（點字投入熔爐）</span>
-                <button class="btn" style="padding:4px 10px;" onclick="toggleInventoryDrawer(false)">✕ 收起</button>
-            </div>
+        <!-- 左側：漢字庫（固定於畫面左側） -->
+        <aside class="sidebar">
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="搜尋漢字、注音或分類..." oninput="filterInventory()">
             </div>
@@ -1504,7 +1444,7 @@
             <div class="inventory-list" id="inventoryList"></div>
         </aside>
 
-        <!-- 右側：三槽文字熔爐 -->
+        <!-- 中央／右側：三槽文字熔爐 -->
         <section class="workspace">
             <div class="furnace-circle" id="furnaceCircle">
                 <div class="slot slot-0" id="slot0" onclick="clearSlot(0)">
@@ -1527,6 +1467,25 @@
             <div class="log-toast" id="logToast"></div>
         </section>
     </main>
+
+    <!-- 🎯 右側可收合任務抽屜（平時縮合在右邊，點擊標籤才滑出） -->
+    <aside class="quest-drawer" id="questBanner">
+        <button class="quest-drawer-tab" id="questDrawerTab" onclick="toggleQuestDrawer()" title="點擊展開 / 收合煉字任務">
+            <span class="quest-tab-icon">📜</span>
+            <span class="quest-tab-label">任務</span>
+            <span class="quest-tab-arrow" id="questTabArrow">◀</span>
+        </button>
+        <div class="quest-drawer-panel">
+            <div class="quest-header">
+                <span class="quest-tag" id="questStageTag">📜 煉字任務</span>
+                <span class="quest-reward" id="questRewardText">獎勵 +2 🪙</span>
+                <button class="quest-close-mini" onclick="toggleQuestDrawer(false)" title="收合任務欄">✕</button>
+            </div>
+            <div class="quest-title" id="questTitle">正在讀取煉字卷軸...</div>
+            <div class="quest-clue" id="questClue">集齊同一主題分類的所有漢字，即可解鎖成就徽章！</div>
+            <div class="quest-actions" id="questActions"></div>
+        </div>
+    </aside>
 
     <!-- 👤 帳號登入與雲端同步 Modal -->
     <div class="modal-overlay" id="authModal" onclick="if(event.target === this) closeModal('authModal')">
@@ -1631,34 +1590,8 @@
             <div class="modal-body" id="noticeModalBody"></div>
         </div>
     </div>
-<!-- 抽屜背景遮罩 -->
-    <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeAllDrawers()"></div>
 
-    <!-- 右側邊緣懸浮書籤按鈕 -->
-    <div class="right-edge-tabs">
-        <button class="edge-tab" onclick="toggleQuestDrawer()" title="開啟／收合徽章任務">🔥 任務</button>
-        <button class="edge-tab inventory-tab" onclick="toggleInventoryDrawer()" title="從右側叫出漢字庫">📚 字庫</button>
-    </div>
-
-    <!-- 🔥 右側任務收合抽屜 -->
-    <aside class="quest-drawer" id="questDrawer">
-        <div class="quest-drawer-header">
-            <h3 style="color:var(--accent-gold); font-size:1rem;">🔥 徽章衝刺任務</h3>
-            <button class="btn" onclick="toggleQuestDrawer(false)">✕</button>
-        </div>
-        <div class="quest-drawer-body">
-            <div class="quest-banner" id="questBanner" style="margin: 0; width: 100%;">
-                <div class="quest-header">
-                    <span class="quest-tag" id="questStageTag">📜 煉字任務</span>
-                    <span class="quest-reward" id="questRewardText">獎勵 +2 🪙</span>
-                </div>
-                <div class="quest-title" id="questTitle">正在讀取煉字卷軸...</div>
-                <div class="quest-clue" id="questClue">集齊同一主題分類的所有漢字，即可解鎖成就徽章！</div>
-                <div class="quest-actions" id="questActions"></div>
-            </div>
-        </div>
-    </aside>
-<!-- 🎓 新手教學聚光燈引導 -->
+    <!-- 🎓 新手教學聚光燈引導 -->
     <div class="tutorial-overlay" id="tutorialOverlay">
         <div class="tutorial-spotlight" id="tutorialSpotlight"></div>
         <div class="tutorial-card" id="tutorialCard">
@@ -1681,7 +1614,7 @@
         // 1. Google 試算表與 Apps Script 設定區
         // ==========================================
         const SHEET_ID = '1W7klW4ch7WxMY4s2puN_2ZD9xxOIzdZh51Up0KDW1ZE';
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwPnMr9Rxah0xv7in0-EIcrrEB9VBitZVXaRGWvA1tCkiq6KA4_58c8i1wUirT_K6KOg/exec'; // 👈 請貼回你的 Apps Script 網頁應用程式 URL（結尾為 /exec）
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwwPnMr9Rxah0xv7in0-EIcrrEB9VBitZVXaRGWvA1tCkiq6KA4_58c8i1wUirT_K6KOg/exec';
         const ITEMS_SHEET_NAME = 'Items';
         const RECIPES_SHEET_NAME = 'Recipes';
         const NOTICES_SHEET_NAME = 'Notices';
@@ -2433,7 +2366,6 @@
 
         function findDemoRecipeForTutorial() {
             const entries = Object.entries(RECIPES);
-            // 優先找「尚未煉出、且原料已齊全」的 2 字配方；若全煉完了就找任一可用配方
             let fallback = null;
             for (const [ingKey, resultChar] of entries) {
                 if (!ITEMS[resultChar]) continue;
@@ -2459,7 +2391,7 @@
                 {
                     selector: '.sidebar',
                     title: '① 挑選漢字原料',
-                    desc: `歡迎來到<strong>文字大熔爐</strong>！這裡是你的漢字原料庫，可依分類篩選或搜尋注音。${demoText}`,
+                    desc: `歡迎來到<strong>文字大熔爐</strong>！左側是你的漢字原料庫，可依分類篩選或搜尋注音。${demoText}`,
                     extraHTML: tutorialDemoRecipe
                         ? `<div class="tutorial-demo-box">
                                <span style="font-size:0.8rem; color:#fde68a;">懶得找字？一鍵示範放入：</span>
@@ -2485,15 +2417,16 @@
                     extraHTML: ''
                 },
                 {
-                    selector: '.btn-shop',
-                    title: '④ 分類圖鑑與配方提示商店',
-                    desc: '卡關時可點<strong>「📜 分類圖鑑」</strong>查看各主題進度，或進<strong>「🛒 商店」</strong>花費 <strong>5 金幣</strong>購買提示（會優先推薦你目前原料已齊全的新字喔！）。',
+                    selector: '#questDrawerTab',
+                    title: '④ 煉字任務與提示商店',
+                    desc: '點擊右側<strong>「📜 任務」</strong>標籤可隨時展開目前的煉字線索；卡關時也可點頂部<strong>「🛒 商店」</strong>花費 5 金幣購買提示！',
                     extraHTML: ''
                 }
             ];
         }
 
         function startTutorial() {
+            toggleQuestDrawer(false);
             tutorialDemoRecipe = findDemoRecipeForTutorial();
             tutorialStepIndex = 0;
             const overlay = document.getElementById('tutorialOverlay');
@@ -2545,17 +2478,15 @@
             let cardLeft = rect.left + (rect.width - cardW) / 2;
             let cardTop;
 
-            if (window.innerWidth > 768 && rect.height > window.innerHeight * 0.65) {
-                // 桌面版大型區塊：置於側邊或工作檯左下角空白處，完全避開中央熔爐
+            if (rect.height > window.innerHeight * 0.65) {
                 if (window.innerWidth - rect.right >= cardW + 24) {
                     cardLeft = rect.right + 16;
                     cardTop = Math.max(80, rect.top + 24);
                 } else {
-                    cardLeft = rect.left + 20;
-                    cardTop = Math.max(rect.top + 360, window.innerHeight - cardH - 20);
+                    cardLeft = Math.max(12, rect.left - cardW - 16);
+                    cardTop = Math.max(80, window.innerHeight - cardH - 20);
                 }
             } else {
-                // 依目標位於螢幕上半部或下半部，自動放在對向區域避免遮擋
                 const targetCenterY = rect.top + rect.height / 2;
                 if (targetCenterY < window.innerHeight / 2) {
                     cardTop = Math.min(rect.bottom + 8, window.innerHeight - cardH - 8);
@@ -2626,12 +2557,24 @@
         });
 
         // ==========================================
-        // 5.5 動態時間線任務引擎（自動依進度生成引導）
+        // 5.5 動態時間線任務引擎（右側收合抽屜）
         // ==========================================
         let completedQuestIds = new Set();
         let currentActiveQuest = null;
+        let isQuestDrawerOpen = false;
 
-        // 建立「結果字 -> 配方原料陣列」的反向查詢表
+        function toggleQuestDrawer(forceState) {
+            const drawer = document.getElementById('questBanner');
+            const arrow = document.getElementById('questTabArrow');
+            if (!drawer) return;
+
+            isQuestDrawerOpen = typeof forceState === 'boolean' ? forceState : !isQuestDrawerOpen;
+            drawer.classList.toggle('open', isQuestDrawerOpen);
+            if (arrow) {
+                arrow.innerText = isQuestDrawerOpen ? '▶' : '◀';
+            }
+        }
+
         function buildReverseRecipeMap() {
             const map = {};
             Object.entries(RECIPES).forEach(([ingKey, resChar]) => {
@@ -2642,14 +2585,12 @@
             return map;
         }
 
-        // 遮罩字義中的答案字，避免直接暴雷
         function maskTargetDesc(char, desc) {
             if (!desc) return '試著觀察字形結構，將相關的字根投入熔爐！';
             const escaped = char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             return desc.replace(new RegExp(escaped, 'g'), '□');
         }
 
-        // 依照玩家目前解鎖進度，動態決定當前最適合的任務
         function evaluateCurrentQuest() {
             const reverseMap = buildReverseRecipeMap();
             const groups = Object.values(getGroupedCollections()).filter(g => g.isBadgeGroup);
@@ -2657,7 +2598,6 @@
             const initialCount = INITIAL_UNLOCKED.length;
             const newCraftedCount = Math.max(0, totalUnlocked - initialCount);
 
-            // 找出所有「尚未解鎖、但材料已全部齊全（保證不卡關）」的可合成字
             const craftablePool = [];
             Object.entries(reverseMap).forEach(([char, ingredients]) => {
                 if (!ITEMS[char] || unlockedItems.has(char)) return;
@@ -2671,12 +2611,10 @@
                 }
             });
 
-            // 1. 檢查是否還有「正在進行中且目標尚未解鎖」的任務（保持任務穩定不亂跳）
             if (currentActiveQuest && currentActiveQuest.targetChar && !unlockedItems.has(currentActiveQuest.targetChar)) {
                 return currentActiveQuest;
             }
 
-            // 2. 若全部字都已解鎖
             if (craftablePool.length === 0) {
                 const lockedTotal = Object.keys(ITEMS).length - totalUnlocked;
                 if (lockedTotal <= 0) {
@@ -2693,7 +2631,6 @@
                 return null;
             }
 
-            // 3. 【階段一：破冰期】（剛開始遊戲，煉出不到 3 個新字）
             if (newCraftedCount < 3) {
                 const twoSlot = craftablePool.filter(c => c.ingredients.length === 2);
                 const pick = (twoSlot.length ? twoSlot : craftablePool)[0];
@@ -2708,7 +2645,6 @@
                 };
             }
 
-            // 4. 【階段三優先插隊：徽章臨門一腳】（有任何主題只差 1 字就集齊，且該字材料已齊全）
             for (const g of groups) {
                 if (!g.completed && g.totalCount - g.unlockedCount === 1) {
                     const missingChar = g.chars.find(c => !unlockedItems.has(c));
@@ -2727,7 +2663,6 @@
                 }
             }
 
-            // 5. 【階段四：三槽高階挑戰】（解鎖 >= 6 字後，若有三字配方可合，引導體驗三槽）
             if (newCraftedCount >= 6 && !completedQuestIds.has('first_3slot_done')) {
                 const threeSlot = craftablePool.find(c => c.ingredients.length === 3);
                 if (threeSlot) {
@@ -2743,7 +2678,6 @@
                 }
             }
 
-            // 6. 【階段二：主題探索期】（挑選「已解鎖部分字、進度最高」的主題來推進）
             const inProgressGroups = groups
                 .filter(g => !g.completed && g.unlockedCount > 0)
                 .sort((a, b) => (b.unlockedCount / b.totalCount) - (a.unlockedCount / a.totalCount));
@@ -2763,7 +2697,6 @@
                 }
             }
 
-            // 7. 【階段五：智慧雷達保底】（隨機挑一個材料已全齊的未解鎖字）
             const fallback = craftablePool[0];
             const themeLabel = fallback.themes[0] || '綜合字集';
             return {
@@ -2781,7 +2714,6 @@
             const banner = document.getElementById('questBanner');
             if (!banner) return;
 
-            // 若剛煉出的字正好是當前任務目標，發放任務金幣獎勵
             if (justUnlockedChar && currentActiveQuest && currentActiveQuest.targetChar === justUnlockedChar) {
                 completedQuestIds.add(currentActiveQuest.id);
                 if (currentActiveQuest.reward > 0) {
@@ -2800,7 +2732,7 @@
                 return;
             }
 
-            banner.style.display = 'block';
+            banner.style.display = 'flex';
             document.getElementById('questStageTag').innerText = currentActiveQuest.stage;
             document.getElementById('questRewardText').innerText = currentActiveQuest.reward > 0 ? `任務獎勵 +${currentActiveQuest.reward} 🪙` : '已全部完成';
             document.getElementById('questTitle').innerText = currentActiveQuest.title;
@@ -2822,6 +2754,7 @@
             if (!currentActiveQuest || !currentActiveQuest.hintIngredient) return;
             clearAllSlots();
             selectCard(currentActiveQuest.hintIngredient);
+            toggleQuestDrawer(false);
             showToast(`💡 已將線索原料【${currentActiveQuest.hintIngredient}】放入爐位 1，請搭配另一個字試試！`);
         }
         
@@ -3296,6 +3229,7 @@
         }
 
         function openModal(id) {
+            toggleQuestDrawer(false);
             if (id === 'pokedexModal') {
                 expandedPokedexGroups.clear();
                 renderPokedex();
@@ -3389,124 +3323,6 @@
             }
             updateCoinUI();
         }
-        // ==========================================
-        // 右側任務抽屜 & 窄螢幕字庫拖曳手勢控制
-        // ==========================================
-        function updateDrawerBackdrop() {
-            const questOpen = document.getElementById('questDrawer')?.classList.contains('open');
-            const invOpen = document.getElementById('inventorySidebar')?.classList.contains('open');
-            const backdrop = document.getElementById('drawerBackdrop');
-            if (!backdrop) return;
-            backdrop.classList.toggle('open', !!(questOpen || invOpen));
-        }
-
-        function toggleQuestDrawer(forceState) {
-            const drawer = document.getElementById('questDrawer');
-            const sidebar = document.getElementById('inventorySidebar');
-            if (!drawer) return;
-            const next = typeof forceState === 'boolean' ? forceState : !drawer.classList.contains('open');
-            if (next && sidebar) sidebar.classList.remove('open');
-            drawer.classList.toggle('open', next);
-            updateDrawerBackdrop();
-        }
-
-        function toggleInventoryDrawer(forceState) {
-            const sidebar = document.getElementById('inventorySidebar');
-            const drawer = document.getElementById('questDrawer');
-            if (!sidebar) return;
-            const next = typeof forceState === 'boolean' ? forceState : !sidebar.classList.contains('open');
-            if (next && drawer) drawer.classList.remove('open');
-            sidebar.style.transform = '';
-            sidebar.classList.toggle('open', next);
-            updateDrawerBackdrop();
-        }
-
-        function closeAllDrawers() {
-            document.getElementById('questDrawer')?.classList.remove('open');
-            const sidebar = document.getElementById('inventorySidebar');
-            if (sidebar) {
-                sidebar.style.transform = '';
-                sidebar.classList.remove('open');
-            }
-            updateDrawerBackdrop();
-        }
-
-        // 手機／觸控螢幕：從右側往左拖曳拉出字庫、往右滑動收回
-        (function initInventorySwipeGesture() {
-            let startX = 0;
-            let startY = 0;
-            let isDragging = false;
-            let wasOpen = false;
-            let drawerWidth = 320;
-
-            document.addEventListener('touchstart', (e) => {
-                if (window.innerWidth > 860) return;
-                if (e.touches.length !== 1) return;
-                // 若有開啟中央彈窗或橫向滑動分類標籤則不攔截
-                if (e.target.closest('.modal-overlay[style*="flex"]') || e.target.closest('.category-filter')) return;
-
-                const sidebar = document.getElementById('inventorySidebar');
-                if (!sidebar) return;
-
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                wasOpen = sidebar.classList.contains('open');
-                drawerWidth = sidebar.offsetWidth || Math.min(window.innerWidth * 0.86, 340);
-
-                // 字庫關閉時：從螢幕右半邊開始往左滑（或從右邊緣拉出）即可觸發
-                if (wasOpen || startX >= window.innerWidth * 0.45) {
-                    isDragging = true;
-                }
-            }, { passive: true });
-
-            document.addEventListener('touchmove', (e) => {
-                if (!isDragging || window.innerWidth > 860) return;
-                const sidebar = document.getElementById('inventorySidebar');
-                if (!sidebar) return;
-
-                const dx = e.touches[0].clientX - startX;
-                const dy = e.touches[0].clientY - startY;
-
-                // 若主要是上下捲動字庫列表則取消左右拖曳
-                if (!sidebar.classList.contains('dragging') && Math.abs(dy) > Math.abs(dx)) {
-                    isDragging = false;
-                    return;
-                }
-
-                if (Math.abs(dx) > 12) {
-                    sidebar.classList.add('dragging');
-                    let offsetX;
-                    if (wasOpen) {
-                        // 已開啟時，往右拖曳（dx > 0）跟著手指收合
-                        offsetX = Math.max(0, Math.min(drawerWidth, dx));
-                    } else {
-                        // 關閉時，往左拖曳（dx < 0）從右側跟手拉出
-                        offsetX = Math.max(0, Math.min(drawerWidth, drawerWidth + dx));
-                    }
-                    sidebar.style.transform = `translateX(${offsetX}px)`;
-                }
-            }, { passive: true });
-
-            document.addEventListener('touchend', (e) => {
-                if (!isDragging) return;
-                isDragging = false;
-                const sidebar = document.getElementById('inventorySidebar');
-                if (!sidebar) return;
-
-                const wasDragging = sidebar.classList.contains('dragging');
-                sidebar.classList.remove('dragging');
-                sidebar.style.transform = '';
-
-                if (!wasDragging) return;
-                const dx = (e.changedTouches[0]?.clientX || startX) - startX;
-
-                if (wasOpen) {
-                    toggleInventoryDrawer(dx <= 55); // 往右滑超過 55px 即收起
-                } else {
-                    toggleInventoryDrawer(dx <= -45); // 往左滑超過 45px 即展開
-                }
-            });
-        })();
     </script>
 </body>
 </html>
