@@ -37,6 +37,111 @@
             overflow: hidden;
         }
 
+        /* 🔥 載入中全螢幕動畫遮罩 */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #261b18 0%, #0f172a 78%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            padding: 24px;
+            transition: opacity 0.45s ease, visibility 0.45s ease;
+        }
+
+        .loading-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-furnace-ring {
+            width: 112px;
+            height: 112px;
+            border-radius: 50%;
+            border: 3px dashed rgba(251, 191, 36, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: spinSlow 9s linear infinite;
+            box-shadow: 0 0 36px rgba(249, 115, 22, 0.28);
+        }
+
+        .loading-furnace-core {
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.35) 0%, rgba(15, 23, 42, 0.95) 72%);
+            border: 2px solid var(--accent-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            animation: spinReverse 9s linear infinite, flameBeat 1.3s ease-in-out infinite;
+        }
+
+        .loading-spark {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            box-shadow: 0 0 10px var(--accent-ember);
+        }
+        .loading-spark.s1 { top: -5px; left: 50%; transform: translateX(-50%); }
+        .loading-spark.s2 { bottom: 10px; left: 10px; background: var(--accent-ember); }
+        .loading-spark.s3 { bottom: 10px; right: 10px; background: #fde047; }
+
+        .loading-title {
+            font-size: 1.35rem;
+            font-weight: bold;
+            color: var(--accent-gold);
+            letter-spacing: 2px;
+        }
+
+        .loading-status {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            text-align: center;
+            min-height: 1.4em;
+        }
+
+        .loading-bar-track {
+            width: min(260px, 76vw);
+            height: 7px;
+            background: #1e293b;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .loading-bar-fill {
+            height: 100%;
+            width: 18%;
+            background: linear-gradient(90deg, var(--accent-ember), var(--accent-gold), #fde047);
+            border-radius: 999px;
+            transition: width 0.35s ease;
+        }
+
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes spinReverse {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+        }
+
+        @keyframes flameBeat {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(0deg) scale(1.08); }
+        }
+
         /* 頂部導覽列 */
         header {
             background-color: var(--panel-bg);
@@ -1416,6 +1521,21 @@
 </head>
 <body>
 
+    <!-- 🔥 初始載入中動畫遮罩（檔案與雲端進度讀取完成後淡出） -->
+    <div class="loading-screen" id="loadingScreen" aria-live="polite">
+        <div class="loading-furnace-ring">
+            <span class="loading-spark s1"></span>
+            <span class="loading-spark s2"></span>
+            <span class="loading-spark s3"></span>
+            <div class="loading-furnace-core">🔥</div>
+        </div>
+        <div class="loading-title">文字大熔爐</div>
+        <div class="loading-status" id="loadingStatusText">正在點燃爐火，讀取說文解字資料庫...</div>
+        <div class="loading-bar-track">
+            <div class="loading-bar-fill" id="loadingBarFill"></div>
+        </div>
+    </div>
+
     <header>
         <div class="title-group">
             <h1>🔥 文字大熔爐 <span style="font-size:0.8rem; color:var(--text-muted);">Glyph Transmuter</span></h1>
@@ -1621,6 +1741,32 @@
     
     <script>
         // ==========================================
+        // 0. 載入進度畫面控制
+        // ==========================================
+        function updateLoadingScreen(percent, statusText) {
+            const bar = document.getElementById('loadingBarFill');
+            const text = document.getElementById('loadingStatusText');
+            if (bar && typeof percent === 'number') {
+                bar.style.width = `${Math.max(5, Math.min(100, percent))}%`;
+            }
+            if (text && statusText) {
+                text.innerText = statusText;
+            }
+        }
+
+        function hideLoadingScreen() {
+            const screen = document.getElementById('loadingScreen');
+            if (!screen) return;
+            updateLoadingScreen(100, '爐火已旺，準備開煉！');
+            requestAnimationFrame(() => {
+                screen.classList.add('fade-out');
+                setTimeout(() => {
+                    screen.style.display = 'none';
+                }, 480);
+            });
+        }
+
+        // ==========================================
         // 1. Google 試算表與 Apps Script 設定區
         // ==========================================
         const SHEET_ID = '1W7klW4ch7WxMY4s2puN_2ZD9xxOIzdZh51Up0KDW1ZE';
@@ -1764,6 +1910,7 @@
             }
 
             try {
+                updateLoadingScreen(28, '正在讀取漢字庫、造字配方與公告...');
                 const baseUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=`;
                 const [itemsRes, recipesRes, noticesRes] = await Promise.all([
                     fetch(baseUrl + encodeURIComponent(ITEMS_SHEET_NAME)),
@@ -1771,6 +1918,7 @@
                     fetch(baseUrl + encodeURIComponent(NOTICES_SHEET_NAME)).catch(() => null)
                 ]);
 
+                updateLoadingScreen(52, '正在解析字形結構與徽章分類...');
                 const itemsText = await itemsRes.text();
                 const recipesText = await recipesRes.text();
 
@@ -2113,6 +2261,7 @@
             if (!savedAuth || !GAS_WEB_APP_URL || GAS_WEB_APP_URL === 'YOUR_GAS_WEB_APP_URL') return;
 
             try {
+                updateLoadingScreen(74, '正在同步雲端帳號存檔...');
                 const { username, passwordHash } = JSON.parse(savedAuth);
                 if (!username || !passwordHash) return;
 
@@ -2772,13 +2921,21 @@
         // 6. 遊戲核心互動邏輯
         // ==========================================
         window.onload = async () => {
-            await loadDatabaseFromSheets();
-            loadProgress();
-            await restoreUserSession();
-            checkAndAwardBadgeCoins(false);
-            renderInventory();
-            updateProgress();
-            updateQuestBanner();
+            try {
+                updateLoadingScreen(15, '正在連線至文字資料庫...');
+                await loadDatabaseFromSheets();
+                updateLoadingScreen(64, '正在讀取本機存檔...');
+                loadProgress();
+                await restoreUserSession();
+                updateLoadingScreen(88, '正在整理字庫與成就徽章...');
+                checkAndAwardBadgeCoins(false);
+                renderInventory();
+                updateProgress();
+                updateQuestBanner();
+            } finally {
+                hideLoadingScreen();
+            }
+
             if (NOTICES.length > 0) {
                 openModal('noticeModal');
             } else if (!localStorage.getItem(TUTORIAL_STORAGE_KEY)) {
