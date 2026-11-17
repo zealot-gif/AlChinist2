@@ -1067,7 +1067,8 @@
         }
 
         /* 手機與窄螢幕響應式配置 */
-        @media (max-width: 768px) {
+        /* 窄螢幕與手機響應式配置：熔爐常駐全畫面，字庫與任務皆可從右側叫出/拖曳 */
+        @media (max-width: 860px) {
             body {
                 position: fixed;
                 inset: 0;
@@ -1083,75 +1084,112 @@
                 font-size: 1.05rem;
             }
             main {
-                flex-direction: column-reverse;
+                flex-direction: column;
                 flex: 1;
                 min-height: 0;
                 height: auto;
             }
             .workspace {
-                flex: 0 0 auto;
-                height: auto;
-                overflow: visible;
-                padding: 10px 10px 12px;
+                flex: 1;
+                width: 100%;
+                height: 100%;
+                padding: 28px 14px 20px;
+                justify-content: center;
             }
             .workspace-hint {
-                font-size: 0.75rem;
-                margin-bottom: 8px;
+                font-size: 0.78rem;
+                margin-bottom: 12px;
+                padding: 0 28px;
             }
             .furnace-circle {
-                width: 196px;
-                height: 196px;
-                margin-bottom: 10px;
+                width: 224px;
+                height: 224px;
+                margin-bottom: 16px;
             }
             .slot {
-                width: 60px;
-                height: 60px;
-                border-radius: 10px;
+                width: 68px;
+                height: 68px;
+                border-radius: 11px;
             }
-            .slot-0 { top: 10px; }
-            .slot-1 { bottom: 16px; left: 16px; }
-            .slot-2 { bottom: 16px; right: 16px; }
+            .slot-0 { top: 12px; }
+            .slot-1 { bottom: 18px; left: 18px; }
+            .slot-2 { bottom: 18px; right: 18px; }
             .slot-char {
-                font-size: 1.45rem;
+                font-size: 1.6rem;
             }
             .furnace-core {
-                font-size: 1.1rem;
+                font-size: 1.2rem;
             }
             .combine-btn {
-                font-size: 0.95rem;
-                padding: 8px 24px;
+                font-size: 1rem;
+                padding: 10px 28px;
             }
             .clear-btn {
-                padding: 7px 12px;
-                font-size: 0.8rem;
+                padding: 9px 14px;
+                font-size: 0.85rem;
             }
             .log-toast {
-                top: 6px;
+                top: 8px;
                 bottom: auto;
-                padding: 7px 12px;
-                font-size: 0.8rem;
+                padding: 8px 14px;
+                font-size: 0.82rem;
+            }
+            /* 字庫改為右側滑出／手勢拖曳抽屜 */
+            .edge-tab.inventory-tab {
+                display: flex;
+            }
+            .sidebar-drawer-header {
+                display: flex;
             }
             .sidebar {
-                flex: 1;
-                min-height: 0;
-                width: 100%;
-                height: auto;
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: min(86vw, 340px);
+                height: 100dvh;
+                z-index: 90;
                 border-right: none;
-                border-top: 1px solid var(--border-color);
+                border-left: 1.5px solid var(--accent-blue);
+                box-shadow: -8px 0 28px rgba(0, 0, 0, 0.65);
+                transform: translateX(100%);
+                transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .sidebar.dragging {
+                transition: none;
             }
             .search-box {
                 padding: 8px 10px;
             }
             .search-box input {
-                padding: 6px 10px;
+                padding: 7px 10px;
                 font-size: 0.85rem;
             }
             .category-filter {
                 padding: 6px 10px;
             }
             .inventory-list {
-                padding: 8px 10px calc(72px + env(safe-area-inset-bottom, 0px));
-                gap: 6px;
+                padding: 10px 10px calc(72px + env(safe-area-inset-bottom, 0px));
+                gap: 7px;
+            }
+            .tutorial-card {
+                padding: 12px 14px;
+            }
+            .tutorial-title {
+                font-size: 0.98rem;
+                margin-bottom: 4px;
+            }
+            .tutorial-desc {
+                font-size: 0.82rem;
+                line-height: 1.45;
+                margin-bottom: 8px;
+            }
+            .tutorial-demo-box {
+                padding: 6px 8px;
+                margin-bottom: 8px;
             }
         }
         /* 聚光燈互動式新手教學 */
@@ -1317,6 +1355,109 @@
             .quest-title { font-size: 0.84rem; }
             .quest-clue { font-size: 0.75rem; }
         }
+        /* 右側滑出抽屜遮罩 */
+        .drawer-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(2px);
+            z-index: 84;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .drawer-backdrop.open {
+            display: block;
+            opacity: 1;
+        }
+
+        /* 右側邊緣懸浮書籤按鈕 */
+        .right-edge-tabs {
+            position: fixed;
+            right: 0;
+            top: 120px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 83;
+        }
+
+        .edge-tab {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            background: linear-gradient(180deg, #1e293b, #0f172a);
+            color: var(--accent-gold);
+            border: 1.5px solid var(--accent-gold);
+            border-right: none;
+            border-radius: 10px 0 0 10px;
+            padding: 12px 7px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: -4px 4px 14px rgba(0, 0, 0, 0.45);
+            transition: transform 0.2s ease, background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .edge-tab:hover {
+            transform: translateX(-3px);
+            background: #291d0e;
+        }
+
+        .edge-tab.inventory-tab {
+            display: none; /* 寬螢幕左側已有字庫時隱藏，縮小螢幕自動顯示 */
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        /* 右側任務收合抽屜 */
+        .quest-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: min(88vw, 380px);
+            background: var(--panel-bg);
+            border-left: 1.5px solid var(--accent-gold);
+            box-shadow: -8px 0 28px rgba(0, 0, 0, 0.65);
+            z-index: 92;
+            transform: translateX(100%);
+            transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .quest-drawer.open {
+            transform: translateX(0);
+        }
+
+        .quest-drawer-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .quest-drawer-body {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* 字庫抽屜頂部標題列（僅在窄螢幕右側抽屜模式顯示） */
+        .sidebar-drawer-header {
+            display: none;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            justify-content: space-between;
+            align-items: center;
+            background: #131c2e;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -1344,7 +1485,11 @@
 
     <main>
         <!-- 左側：漢字庫 -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="inventorySidebar">
+            <div class="sidebar-drawer-header">
+                <span style="font-weight:bold; color:var(--accent-blue); font-size:0.95rem;">📚 漢字原料庫（點字投入熔爐）</span>
+                <button class="btn" style="padding:4px 10px;" onclick="toggleInventoryDrawer(false)">✕ 收起</button>
+            </div>
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="搜尋漢字、注音或分類..." oninput="filterInventory()">
             </div>
@@ -1361,16 +1506,6 @@
 
         <!-- 右側：三槽文字熔爐 -->
         <section class="workspace">
-            <div class="quest-banner" id="questBanner">
-                <div class="quest-header">
-                    <span class="quest-tag" id="questStageTag">📜 煉字任務</span>
-                    <span class="quest-reward" id="questRewardText">獎勵 +2 🪙</span>
-                </div>
-                <div class="quest-title" id="questTitle">正在讀取煉字卷軸...</div>
-                <div class="quest-clue" id="questClue">集齊同一主題分類的所有漢字，即可解鎖成就徽章！</div>
-                <div class="quest-actions" id="questActions"></div>
-            </div>
-
             <div class="furnace-circle" id="furnaceCircle">
                 <div class="slot slot-0" id="slot0" onclick="clearSlot(0)">
                     <div class="slot-placeholder">爐位 1</div>
@@ -1496,7 +1631,33 @@
             <div class="modal-body" id="noticeModalBody"></div>
         </div>
     </div>
+<!-- 抽屜背景遮罩 -->
+    <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeAllDrawers()"></div>
 
+    <!-- 右側邊緣懸浮書籤按鈕 -->
+    <div class="right-edge-tabs">
+        <button class="edge-tab" onclick="toggleQuestDrawer()" title="開啟／收合徽章任務">🔥 任務</button>
+        <button class="edge-tab inventory-tab" onclick="toggleInventoryDrawer()" title="從右側叫出漢字庫">📚 字庫</button>
+    </div>
+
+    <!-- 🔥 右側任務收合抽屜 -->
+    <aside class="quest-drawer" id="questDrawer">
+        <div class="quest-drawer-header">
+            <h3 style="color:var(--accent-gold); font-size:1rem;">🔥 徽章衝刺任務</h3>
+            <button class="btn" onclick="toggleQuestDrawer(false)">✕</button>
+        </div>
+        <div class="quest-drawer-body">
+            <div class="quest-banner" id="questBanner" style="margin: 0; width: 100%;">
+                <div class="quest-header">
+                    <span class="quest-tag" id="questStageTag">📜 煉字任務</span>
+                    <span class="quest-reward" id="questRewardText">獎勵 +2 🪙</span>
+                </div>
+                <div class="quest-title" id="questTitle">正在讀取煉字卷軸...</div>
+                <div class="quest-clue" id="questClue">集齊同一主題分類的所有漢字，即可解鎖成就徽章！</div>
+                <div class="quest-actions" id="questActions"></div>
+            </div>
+        </div>
+    </aside>
 <!-- 🎓 新手教學聚光燈引導 -->
     <div class="tutorial-overlay" id="tutorialOverlay">
         <div class="tutorial-spotlight" id="tutorialSpotlight"></div>
@@ -3228,6 +3389,124 @@
             }
             updateCoinUI();
         }
+        // ==========================================
+        // 右側任務抽屜 & 窄螢幕字庫拖曳手勢控制
+        // ==========================================
+        function updateDrawerBackdrop() {
+            const questOpen = document.getElementById('questDrawer')?.classList.contains('open');
+            const invOpen = document.getElementById('inventorySidebar')?.classList.contains('open');
+            const backdrop = document.getElementById('drawerBackdrop');
+            if (!backdrop) return;
+            backdrop.classList.toggle('open', !!(questOpen || invOpen));
+        }
+
+        function toggleQuestDrawer(forceState) {
+            const drawer = document.getElementById('questDrawer');
+            const sidebar = document.getElementById('inventorySidebar');
+            if (!drawer) return;
+            const next = typeof forceState === 'boolean' ? forceState : !drawer.classList.contains('open');
+            if (next && sidebar) sidebar.classList.remove('open');
+            drawer.classList.toggle('open', next);
+            updateDrawerBackdrop();
+        }
+
+        function toggleInventoryDrawer(forceState) {
+            const sidebar = document.getElementById('inventorySidebar');
+            const drawer = document.getElementById('questDrawer');
+            if (!sidebar) return;
+            const next = typeof forceState === 'boolean' ? forceState : !sidebar.classList.contains('open');
+            if (next && drawer) drawer.classList.remove('open');
+            sidebar.style.transform = '';
+            sidebar.classList.toggle('open', next);
+            updateDrawerBackdrop();
+        }
+
+        function closeAllDrawers() {
+            document.getElementById('questDrawer')?.classList.remove('open');
+            const sidebar = document.getElementById('inventorySidebar');
+            if (sidebar) {
+                sidebar.style.transform = '';
+                sidebar.classList.remove('open');
+            }
+            updateDrawerBackdrop();
+        }
+
+        // 手機／觸控螢幕：從右側往左拖曳拉出字庫、往右滑動收回
+        (function initInventorySwipeGesture() {
+            let startX = 0;
+            let startY = 0;
+            let isDragging = false;
+            let wasOpen = false;
+            let drawerWidth = 320;
+
+            document.addEventListener('touchstart', (e) => {
+                if (window.innerWidth > 860) return;
+                if (e.touches.length !== 1) return;
+                // 若有開啟中央彈窗或橫向滑動分類標籤則不攔截
+                if (e.target.closest('.modal-overlay[style*="flex"]') || e.target.closest('.category-filter')) return;
+
+                const sidebar = document.getElementById('inventorySidebar');
+                if (!sidebar) return;
+
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                wasOpen = sidebar.classList.contains('open');
+                drawerWidth = sidebar.offsetWidth || Math.min(window.innerWidth * 0.86, 340);
+
+                // 字庫關閉時：從螢幕右半邊開始往左滑（或從右邊緣拉出）即可觸發
+                if (wasOpen || startX >= window.innerWidth * 0.45) {
+                    isDragging = true;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging || window.innerWidth > 860) return;
+                const sidebar = document.getElementById('inventorySidebar');
+                if (!sidebar) return;
+
+                const dx = e.touches[0].clientX - startX;
+                const dy = e.touches[0].clientY - startY;
+
+                // 若主要是上下捲動字庫列表則取消左右拖曳
+                if (!sidebar.classList.contains('dragging') && Math.abs(dy) > Math.abs(dx)) {
+                    isDragging = false;
+                    return;
+                }
+
+                if (Math.abs(dx) > 12) {
+                    sidebar.classList.add('dragging');
+                    let offsetX;
+                    if (wasOpen) {
+                        // 已開啟時，往右拖曳（dx > 0）跟著手指收合
+                        offsetX = Math.max(0, Math.min(drawerWidth, dx));
+                    } else {
+                        // 關閉時，往左拖曳（dx < 0）從右側跟手拉出
+                        offsetX = Math.max(0, Math.min(drawerWidth, drawerWidth + dx));
+                    }
+                    sidebar.style.transform = `translateX(${offsetX}px)`;
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                const sidebar = document.getElementById('inventorySidebar');
+                if (!sidebar) return;
+
+                const wasDragging = sidebar.classList.contains('dragging');
+                sidebar.classList.remove('dragging');
+                sidebar.style.transform = '';
+
+                if (!wasDragging) return;
+                const dx = (e.changedTouches[0]?.clientX || startX) - startX;
+
+                if (wasOpen) {
+                    toggleInventoryDrawer(dx <= 55); // 往右滑超過 55px 即收起
+                } else {
+                    toggleInventoryDrawer(dx <= -45); // 往左滑超過 45px 即展開
+                }
+            });
+        })();
     </script>
 </body>
 </html>
